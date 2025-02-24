@@ -1,0 +1,230 @@
+/* Alert Dialog */
+.AlertDialogOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  background-color: rgba(0, 0, 0, 0.5);
+  animation: overlayShow 150ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.AlertDialogContent {
+  position: fixed;
+  left: 50%;
+  top: 50%;
+  z-index: 50;
+  display: grid;
+  width: 100%;
+  max-width: 32rem;
+  transform: translate(-50%, -50%);
+  gap: 1rem;
+  border: 1px solid var(--border);
+  background: white;
+  padding: 1.5rem;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+  animation: contentShow 150ms cubic-bezier(0.16, 1, 0.3, 1);
+  border-radius: 0.5rem;
+}
+
+.AlertDialogHeader {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  text-align: center;
+}
+
+@media (min-width: 640px) {
+  .AlertDialogHeader {
+    text-align: left;
+  }
+}
+
+.AlertDialogFooter {
+  display: flex;
+  flex-direction: column-reverse;
+  gap: 0.5rem;
+}
+
+@media (min-width: 640px) {
+  .AlertDialogFooter {
+    flex-direction: row;
+    justify-content: flex-end;
+  }
+}
+
+.AlertDialogTitle {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.AlertDialogDescription {
+  font-size: 0.875rem;
+  color: var(--text-light);
+}
+
+.AlertDialogAction {
+  display: inline-flex;
+  height: 2.25rem;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.375rem;
+  padding: 0 1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  background-color: var(--primary);
+  color: white;
+  transition: background-color 0.2s;
+}
+
+.AlertDialogAction:hover {
+  background-color: color-mix(in srgb, var(--primary) 90%, black);
+}
+
+.AlertDialogCancel {
+  display: inline-flex;
+  height: 2.25rem;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.375rem;
+  border: 1px solid var(--border);
+  padding: 0 1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  background-color: white;
+  color: var(--text);
+  transition: background-color 0.2s;
+  margin-top: 0.5rem;
+}
+
+@media (min-width: 640px) {
+  .AlertDialogCancel {
+    margin-top: 0;
+  }
+}
+
+.AlertDialogCancel:hover {
+  background-color: #f5f5f5;
+}
+
+/* Tooltip */
+.TooltipContent {
+  z-index: 50;
+  overflow: hidden;
+  border-radius: 0.375rem;
+  padding: 0.375rem 0.75rem;
+  font-size: 0.75rem;
+  line-height: 1rem;
+  color: white;
+  background-color: var(--text);
+  animation: tooltipShow 150ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Animations */
+@keyframes overlayShow {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes contentShow {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -48%) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
+
+@keyframes tooltipShow {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Data attribute states for animations */
+[data-state='open'].AlertDialogOverlay {
+  animation: overlayShow 150ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+[data-state='closed'].AlertDialogOverlay {
+  animation: overlayHide 150ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+[data-state='open'].AlertDialogContent {
+  animation: contentShow 150ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+[data-state='closed'].AlertDialogContent {
+  animation: contentHide 150ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Tooltip positions */
+.TooltipContent[data-side='top'] {
+  animation-name: slideDownAndFade;
+}
+
+.TooltipContent[data-side='right'] {
+  animation-name: slideLeftAndFade;
+}
+
+.TooltipContent[data-side='bottom'] {
+  animation-name: slideUpAndFade;
+}
+
+.TooltipContent[data-side='left'] {
+  animation-name: slideRightAndFade;
+}
+
+@keyframes slideUpAndFade {
+  from {
+    opacity: 0;
+    transform: translateY(2px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideRightAndFade {
+  from {
+    opacity: 0;
+    transform: translateX(-2px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes slideDownAndFade {
+  from {
+    opacity: 0;
+    transform: translateY(-2px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideLeftAndFade {
+  from {
+    opacity: 0;
+    transform: translateX(2px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}

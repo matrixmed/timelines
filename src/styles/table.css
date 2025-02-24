@@ -1,0 +1,143 @@
+.timelines-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    font-size: 13px;
+  }
+  
+  /* Headers */
+  .timelines-table th {
+    background: var(--background);
+    border-bottom: 1px solid var(--border);
+    padding: 8px 12px;
+    text-align: left;
+    font-weight: 600;
+    color: var(--text);
+    position: sticky;
+    top: 71px;
+    z-index: 10;
+  }
+  
+  /* Cells */
+  .timelines-table td {
+    border-bottom: 1px solid var(--border);
+    border-right: 1px solid var(--border);
+    padding: 0;
+  }
+  
+  .timelines-table tr {
+    transition: background-color 0.2s ease;
+  }
+  
+  .timelines-table tr:hover {
+    background-color: rgba(0, 0, 0, 0.02);
+  }
+  
+  /* Row States */
+  .row-edited {
+    background-color: rgba(74, 158, 255, 0.05) !important;
+    border-left: 3px solid var(--primary);
+  }
+  
+  .row-edited:hover {
+    background-color: rgba(74, 158, 255, 0.1) !important;
+  }
+  
+  .pending-rows-container {
+    position: sticky;
+    top: 116px;
+    z-index: 9;
+    background: white;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    margin: 0 -1px;
+  }
+  
+  .pending-row {
+    background: white;
+    border-bottom: 1px solid var(--border);
+  }
+  
+  /* Cell Content */
+  .cell {
+    position: relative;
+  }
+  
+  .cell-content {
+    padding: 4px 8px;
+    min-height: 19px;
+    cursor: pointer;
+    color: var(--text);
+    margin: 2px;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+    max-width: 100%;
+  }
+  
+  .cell-content:hover {
+    background-color: rgba(0, 0, 0, 0.04);
+  }
+  
+  .cell-content-multiline {
+    white-space: pre-wrap;
+    min-height: 38px;
+  }
+  
+  /* Column Widths */
+  .timelines-table th:nth-child(1),
+  .timelines-table td:nth-child(1) {
+    width: 120px;
+  } /* Market */
+  
+  .timelines-table th:nth-child(2),
+  .timelines-table td:nth-child(2) {
+    width: 130px;
+  } /* Client/Sponsor */
+  
+  .timelines-table th:nth-child(3),
+  .timelines-table td:nth-child(3) {
+    width: 150px;
+  } /* Project */
+  
+  .timelines-table th:nth-child(4),
+  .timelines-table td:nth-child(4) {
+    width: 260px;
+  } /* Due Date */
+  
+  .timelines-table th:nth-child(5),
+  .timelines-table td:nth-child(5) {
+    min-width: 220px;
+  } /* Task */
+  
+  .timelines-table th:nth-child(6),
+  .timelines-table td:nth-child(6) {
+    width: 60px;
+  } /* Complete */
+  
+  .timelines-table th:nth-child(7),
+  .timelines-table td:nth-child(7) {
+    width: 60px;
+  } /* Team */
+  
+  .timelines-table th:nth-child(8),
+  .timelines-table td:nth-child(8) {
+    width: 60px;
+  } /* ME */
+  
+  .timelines-table th:nth-child(9),
+  .timelines-table td:nth-child(9) {
+    width: 20px;
+  } /* Deployment */
+  
+  .timelines-table th:nth-child(10),
+  .timelines-table td:nth-child(10) {
+    width: 180px;
+  } /* Notes */
+  
+  .timelines-table th:nth-child(11),
+  .timelines-table td:nth-child(11) {
+    width: 50px;
+  } /* Actions */
+  
+  .center {
+    text-align: center;
+  }
