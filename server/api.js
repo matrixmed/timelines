@@ -9,22 +9,27 @@ const setSocketIO = (socketIO) => {
 };
 
 router.get('/timelines', async (req, res) => {
-    const db = await getDb();
-    const timelines = await db.all('SELECT * FROM timelines ORDER BY dueDate');
-    res.json(timelines);
+    try {
+        const db = await getDb();
+        const timelines = await db.all('SELECT * FROM timelines ORDER BY dueDate');
+        res.json(timelines);
+    } catch (error) {
+        console.error('Error fetching timelines:', error);
+        res.status(500).json({ error: 'Failed to fetch data' });
+    }
 });
 
 router.post('/timelines', async (req, res) => {
     const db = await getDb();
-    const { market, clientSponsor, project, dueDate, task, complete, team, me, deployment, notes } = req.body;
+    const { market, clientSponsor, project, dueDate, task, complete, team, me, deployment, notes, missedDeadline } = req.body;
     
     try {
         const result = await db.run(`
             INSERT INTO timelines (
                 market, clientSponsor, project, dueDate, task,
-                complete, team, me, deployment, notes
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        `, [market, clientSponsor, project, dueDate, task, complete, team, me, deployment, notes]);
+                complete, team, me, deployment, notes, missedDeadline
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `, [market, clientSponsor, project, dueDate, task, complete, team, me, deployment, notes, missedDeadline || false]);
         
         const newRow = {
             id: result.lastID,

@@ -22,7 +22,7 @@
   padding: 1.5rem;
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
   animation: contentShow 150ms cubic-bezier(0.16, 1, 0.3, 1);
-  border-radius: 0.5rem;
+  border-radius: var(--radius-md);
 }
 
 .AlertDialogHeader {
@@ -67,17 +67,20 @@
   height: 2.25rem;
   align-items: center;
   justify-content: center;
-  border-radius: 0.375rem;
+  border-radius: var(--radius-sm);
   padding: 0 1rem;
   font-size: 0.875rem;
   font-weight: 500;
   background-color: var(--primary);
   color: white;
-  transition: background-color 0.2s;
+  transition: background-color 0.2s, transform 0.2s;
+  border: none;
+  cursor: pointer;
 }
 
 .AlertDialogAction:hover {
-  background-color: color-mix(in srgb, var(--primary) 90%, black);
+  background-color: var(--primary-hover);
+  transform: translateY(-1px);
 }
 
 .AlertDialogCancel {
@@ -85,15 +88,16 @@
   height: 2.25rem;
   align-items: center;
   justify-content: center;
-  border-radius: 0.375rem;
+  border-radius: var(--radius-sm);
   border: 1px solid var(--border);
   padding: 0 1rem;
   font-size: 0.875rem;
   font-weight: 500;
   background-color: white;
   color: var(--text);
-  transition: background-color 0.2s;
+  transition: background-color 0.2s, transform 0.2s;
   margin-top: 0.5rem;
+  cursor: pointer;
 }
 
 @media (min-width: 640px) {
@@ -104,13 +108,14 @@
 
 .AlertDialogCancel:hover {
   background-color: #f5f5f5;
+  transform: translateY(-1px);
 }
 
 /* Tooltip */
 .TooltipContent {
   z-index: 50;
   overflow: hidden;
-  border-radius: 0.375rem;
+  border-radius: var(--radius-sm);
   padding: 0.375rem 0.75rem;
   font-size: 0.75rem;
   line-height: 1rem;
@@ -185,6 +190,150 @@
   animation-name: slideRightAndFade;
 }
 
+/* Modal Styles */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 100;
+  padding: 16px;
+  animation: fadeIn 0.2s ease;
+}
+
+.modal-dialog {
+  background: white;
+  border-radius: var(--radius-md);
+  width: 100%;
+  max-width: 425px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
+  animation: modalSlideIn 0.3s ease;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border);
+}
+
+.modal-title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.modal-close {
+  background: none;
+  border: none;
+  font-size: 24px;
+  line-height: 1;
+  cursor: pointer;
+  color: var(--text-light);
+  transition: color 0.2s ease;
+}
+
+.modal-close:hover {
+  color: var(--text);
+}
+
+.modal-content {
+  padding: 20px;
+  max-height: 60vh;
+  overflow-y: auto;
+}
+
+.modal-info-box {
+  margin-top: 16px;
+  background-color: #f9fafb;
+  border-radius: var(--radius-sm);
+  padding: 12px;
+  border: 1px solid var(--border-light);
+}
+
+.modal-info-row {
+  display: flex;
+  margin-bottom: 8px;
+}
+
+.modal-info-row:last-child {
+  margin-bottom: 0;
+}
+
+.modal-info-label {
+  width: 100px;
+  font-weight: 500;
+  color: var(--text-light);
+}
+
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 16px 20px;
+  border-top: 1px solid var(--border);
+  background-color: #f9fafb;
+}
+
+.modal-button {
+  padding: 8px 16px;
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.cancel-button {
+  background-color: white;
+  border: 1px solid var(--border);
+  color: var(--text);
+}
+
+.cancel-button:hover {
+  background-color: #f5f5f5;
+}
+
+.delete-button {
+  background-color: var(--danger);
+  color: white;
+  border: none;
+}
+
+.delete-button:hover {
+  background-color: #dc2626;
+}
+
+@keyframes modalSlideIn {
+  from {
+      opacity: 0;
+      transform: translateY(-20px);
+  }
+  to {
+      opacity: 1;
+      transform: translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+      opacity: 0;
+  }
+  to {
+      opacity: 1;
+  }
+}
+
 @keyframes slideUpAndFade {
   from {
     opacity: 0;
@@ -227,4 +376,17 @@
     opacity: 1;
     transform: translateX(0);
   }
+}
+
+/* Popover styles */
+.popover-content {
+  z-index: 50;
+  overflow: hidden;
+  background-color: white;
+  border-radius: var(--radius-sm);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  animation: contentShow 150ms cubic-bezier(0.16, 1, 0.3, 1);
+  width: 260px;
+  max-height: 400px;
+  overflow-y: auto;
 }

@@ -23,20 +23,54 @@ export const TextAreaEditor = ({ value, onChange, autoFocus, style }) => (
     />
 );
 
-const handleDateChange = (date) => {
-    if (!date) return null;
-    const localDate = new Date(date);
-    localDate.setMinutes(localDate.getMinutes() + localDate.getTimezoneOffset());
-    return localDate.toISOString().split('T')[0];
-};
-
 export const DateEditor = ({ value, onChange, autoFocus }) => {
+    const formatDateForInput = (dateString) => {
+        if (!dateString) return '';
+        
+        try {
+            if (/^\d{4}-\d{2}-\d{2}$/.test(dateString)) {
+                return dateString;
+            }
+            
+            const date = new Date(dateString);
+            if (isNaN(date.getTime())) return '';
+            
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            
+            return `${year}-${month}-${day}`;
+        } catch (error) {
+            console.error('Error formatting date for input:', error);
+            return '';
+        }
+    };
+
+    const handleDateChange = (e) => {
+        const selectedDate = e.target.value;
+        if (!selectedDate) {
+            onChange('');
+            return;
+        }
+        
+        try {
+            onChange(selectedDate);
+            
+            console.log('Date selected:', selectedDate);
+            const testDate = new Date(selectedDate);
+            console.log('Converted to Date object:', testDate);
+            console.log('Day of month:', testDate.getDate());
+        } catch (error) {
+            console.error('Error handling date change:', error);
+        }
+    };
+
     return (
         <div className="date-picker-container">
             <input
                 type="date"
-                value={value || ''}
-                onChange={(e) => onChange(handleDateChange(e.target.value))}
+                value={formatDateForInput(value)}
+                onChange={handleDateChange}
                 className="cell-date-input"
                 autoFocus={autoFocus}
             />

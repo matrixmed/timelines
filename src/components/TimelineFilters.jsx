@@ -1,231 +1,416 @@
-import React from 'react';
-import { Filter as FilterIcon } from 'lucide-react';
+import React, { useEffect } from 'react';
 import { useTimeline } from './TimelineProvider';
-import {
-    Popover,
-    PopoverContent,
-    PopoverTrigger,
-} from "@/components/ui/popover";
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from "@/components/ui/select";
+
+const normalizeColumnName = (column) => {
+    const columnMapping = {
+        'Market': 'market',
+        'Client/Sponsor': 'clientSponsor',
+        'Project': 'project',
+        'Due Date': 'dueDate',
+        'Task': 'task',
+        'Complete': 'complete',
+        'Team': 'team',
+        'ME': 'me',
+        'Deployment': 'deployment',
+        'Notes': 'notes'
+    };
+    
+    return columnMapping[column] || column.toLowerCase().replace(/\//g, '');
+};
 
 const getColumnType = (column) => {
-    switch (column) {
+    const normalizedColumn = normalizeColumnName(column);
+    
+    switch (normalizedColumn) {
         case 'complete':
             return 'boolean';
         case 'dueDate':
             return 'date';
+        case 'market':
+        case 'clientSponsor':
+        case 'project':
+            return 'select';
         default:
             return 'text';
     }
 };
 
-const FilterSelect = ({ value, onChange, children }) => (
-    <Select value={value || ''} onValueChange={onChange}>
-        <SelectTrigger className="w-full">
-            <SelectValue placeholder="Select..." />
-        </SelectTrigger>
-        <SelectContent>
-            {children}
-        </SelectContent>
-    </Select>
-);
-
 export const TimelineFilters = () => {
     const { filters, setFilters, data } = useTimeline();
+    
+    useEffect(() => {
+        const attachFilterButtons = () => {
+            const columns = [
+                'Market',
+                'Client/Sponsor',
+                'Project',
+                'Due Date',
+                'Task',
+                'Complete',
+                'Team',
+                'ME',
+                'Deployment',
+                'Notes'
+            ];
+            
+            columns.forEach(column => {
+                const filterSlot = document.querySelector(`.header-filter-icon[data-column="${column}"]`);
+                if (filterSlot) {
+                    filterSlot.innerHTML = '';
+                    
+                    const normalizedColumn = normalizeColumnName(column);
+                    const hasActiveFilter = filters[normalizedColumn] !== undefined && 
+                                          filters[normalizedColumn] !== null;
+                    
+                    const filterContainer = document.createElement('div');
+                    filterContainer.className = 'simple-filter-container';
+                    
+                    const filterButton = document.createElement('button');
+                    filterButton.className = `simple-filter-button ${hasActiveFilter ? 'active' : ''}`;
+                    filterButton.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg>`;
+                    
+                    if (hasActiveFilter) {
+                        const indicator = document.createElement('span');
+                        indicator.className = 'filter-active-indicator';
+                        filterButton.appendChild(indicator);
+                    }
+                    
+                    const dropdown = document.createElement('div');
+                    dropdown.className = 'simple-filter-dropdown';
+                    
+                    const columnType = getColumnType(column);
+                    
+                    if (columnType === 'boolean') {
+                        const select = document.createElement('select');
+                        select.className = 'simple-filter-select';
+                        
+                        const options = [
+                            { value: '', text: 'All' },
+                            { value: 'true', text: 'Complete' },
+                            { value: 'false', text: 'Incomplete' }
+                        ];
+                        
+                        options.forEach(opt => {
+                            const option = document.createElement('option');
+                            option.value = opt.value;
+                            option.textContent = opt.text;
+                            
+                            const currentValue = filters[normalizedColumn];
+                            option.selected = currentValue === (opt.value === 'true' ? true : 
+                                               opt.value === 'false' ? false : null);
+                            
+                            select.appendChild(option);
+                        });
+                        
+                        select.addEventListener('change', (e) => {
+                            const value = e.target.value;
+                            setFilters(prev => ({
+                                ...prev,
+                                [normalizedColumn]: value === '' ? null : value === 'true'
+                            }));
+                            
+                            dropdown.style.display = 'none';
+                        });
+                        
+                        dropdown.appendChild(select);
+                    } else if (columnType === 'date') {
+                        const dateContainer = document.createElement('div');
+                        dateContainer.className = 'filter-date-range';
+                        
+                        const fromGroup = document.createElement('div');
+                        const fromLabel = document.createElement('label');
+                        fromLabel.textContent = 'From';
+                        const fromInput = document.createElement('input');
+                        fromInput.type = 'date';
+                        fromInput.className = 'simple-filter-input';
+                        fromInput.value = filters[normalizedColumn]?.from || '';
+                        
+                        fromGroup.appendChild(fromLabel);
+                        fromGroup.appendChild(fromInput);
+                        
+                        const toGroup = document.createElement('div');
+                        const toLabel = document.createElement('label');
+                        toLabel.textContent = 'To';
+                        const toInput = document.createElement('input');
+                        toInput.type = 'date';
+                        toInput.className = 'simple-filter-input';
+                        toInput.value = filters[normalizedColumn]?.to || '';
+                        
+                        toGroup.appendChild(toLabel);
+                        toGroup.appendChild(toInput);
+                        
+                        dateContainer.appendChild(fromGroup);
+                        dateContainer.appendChild(toGroup);
+                        
+                        const btnGroup = document.createElement('div');
+                        btnGroup.style.display = 'flex';
+                        btnGroup.style.marginTop = '8px';
+                        
+                        const applyBtn = document.createElement('button');
+                        applyBtn.className = 'simple-filter-apply-btn';
+                        applyBtn.textContent = 'Apply';
+                        
+                        applyBtn.addEventListener('click', () => {
+                            setFilters(prev => ({
+                                ...prev,
+                                [normalizedColumn]: {
+                                    from: fromInput.value || null,
+                                    to: toInput.value || null
+                                }
+                            }));
+                            
+                            dropdown.style.display = 'none';
+                        });
+                        
+                        btnGroup.appendChild(applyBtn);
+                        
+                        dropdown.appendChild(dateContainer);
+                        dropdown.appendChild(btnGroup);
+                        
+                    } else if (columnType === 'select') {
+                        const columnValues = [...new Set(
+                            data.map(row => row[normalizedColumn]).filter(Boolean)
+                        )].sort();
+                        
+                        const select = document.createElement('select');
+                        select.className = 'simple-filter-select';
+                        
+                        const allOption = document.createElement('option');
+                        allOption.value = '';
+                        allOption.textContent = 'All';
+                        select.appendChild(allOption);
+                        
+                        columnValues.forEach(value => {
+                            const option = document.createElement('option');
+                            option.value = value;
+                            option.textContent = value;
+                            option.selected = filters[normalizedColumn] === value;
+                            select.appendChild(option);
+                        });
+                        
+                        select.addEventListener('change', (e) => {
+                            const value = e.target.value;
+                            setFilters(prev => ({
+                                ...prev,
+                                [normalizedColumn]: value || null
+                            }));
+                            
+                            dropdown.style.display = 'none';
+                        });
+                        
+                        dropdown.appendChild(select);
+                    } else {
+                        const input = document.createElement('input');
+                        input.type = 'text';
+                        input.className = 'simple-filter-input';
+                        input.placeholder = `Filter ${column}...`;
+                        input.value = filters[normalizedColumn] || '';
+                        
+                        const btnGroup = document.createElement('div');
+                        btnGroup.style.display = 'flex';
+                        btnGroup.style.marginTop = '8px';
+                        
+                        const applyBtn = document.createElement('button');
+                        applyBtn.className = 'simple-filter-apply-btn';
+                        applyBtn.textContent = 'Apply';
+                        
+                        applyBtn.addEventListener('click', () => {
+                            setFilters(prev => ({
+                                ...prev,
+                                [normalizedColumn]: input.value || null
+                            }));
+                            
+                            dropdown.style.display = 'none';
+                        });
+                        
+                        input.addEventListener('keydown', (e) => {
+                            if (e.key === 'Enter') {
+                                applyBtn.click();
+                            }
+                        });
+                        
+                        btnGroup.appendChild(applyBtn);
+                        
+                        dropdown.appendChild(input);
+                        dropdown.appendChild(btnGroup);
+                    }
+                    
+                    if (hasActiveFilter) {
+                        const clearBtn = document.createElement('button');
+                        clearBtn.className = 'simple-filter-clear-btn';
+                        clearBtn.textContent = 'Clear';
+                        clearBtn.addEventListener('click', () => {
+                            setFilters(prev => {
+                                const newFilters = {...prev};
+                                delete newFilters[normalizedColumn];
+                                return newFilters;
+                            });
+                            
+                            dropdown.style.display = 'none';
+                        });
+                        
+                        const btnGroup = dropdown.querySelector('div[style*="display: flex"]') || document.createElement('div');
+                        if (!btnGroup.parentNode) {
+                            btnGroup.style.display = 'flex';
+                            btnGroup.style.marginTop = '8px';
+                            dropdown.appendChild(btnGroup);
+                        }
+                        
+                        btnGroup.appendChild(clearBtn);
+                    }
+                    
+                    filterButton.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        
+                        document.querySelectorAll('.simple-filter-dropdown').forEach(el => {
+                            if (el !== dropdown) {
+                                el.style.display = 'none';
+                            }
+                        });
+                        
+                        const isVisible = dropdown.style.display === 'block';
+                        dropdown.style.display = isVisible ? 'none' : 'block';
+                        
+                        if (!isVisible) {
+                            const rect = dropdown.getBoundingClientRect();
+                            const viewportHeight = window.innerHeight;
+                            const viewportWidth = window.innerWidth;
+                            
+                            if (rect.bottom > viewportHeight) {
+                                dropdown.style.bottom = '100%';
+                                dropdown.style.top = 'auto';
+                            }
+                            
+                            if (rect.right > viewportWidth) {
+                                dropdown.style.right = '0';
+                                dropdown.style.left = 'auto';
+                            }
+                        }
+                    });
+                    
+                    document.addEventListener('click', (e) => {
+                        if (!dropdown.contains(e.target) && e.target !== filterButton) {
+                            dropdown.style.display = 'none';
+                        }
+                    });
+                    
+                    filterContainer.appendChild(filterButton);
+                    filterContainer.appendChild(dropdown);
+                    filterSlot.appendChild(filterContainer);
+                }
+            });
+        };
+        
+        setTimeout(attachFilterButtons, 100);
+        
+    }, [filters, setFilters, data]);
 
-    const getUniqueValues = (column) => {
-        const values = new Set(data.map(row => row[column]).filter(Boolean));
-        return Array.from(values).sort();
-    };
-
-    const handleFilterChange = (column, value) => {
-        setFilters(prev => ({
-            ...prev,
-            [column]: value === '' ? null : value
-        }));
-    };
-
-    const handleDateRangeChange = (column, type, value) => {
-        setFilters(prev => ({
-            ...prev,
-            [column]: {
-                ...prev[column],
-                [type]: value
-            }
-        }));
-    };
-
-    const renderFilterContent = (column) => {
-        const type = getColumnType(column);
-        const value = filters[column];
-
-        switch (type) {
-            case 'boolean':
-                return (
-                    <div className="p-2 space-y-2">
-                        <FilterSelect
-                            value={value?.toString()}
-                            onChange={(newValue) => handleFilterChange(
-                                column,
-                                newValue === '' ? null : newValue === 'true'
-                            )}
-                        >
-                            <SelectItem value="">All</SelectItem>
-                            <SelectItem value="true">Complete</SelectItem>
-                            <SelectItem value="false">Incomplete</SelectItem>
-                        </FilterSelect>
-                    </div>
-                );
-
-            case 'date':
-                return (
-                    <div className="p-2 space-y-2">
-                        <div className="space-y-1">
-                            <label className="text-sm font-medium">From</label>
-                            <input
-                                type="date"
-                                className="w-full px-2 py-1 text-sm border rounded"
-                                value={value?.from || ''}
-                                onChange={(e) => handleDateRangeChange(column, 'from', e.target.value)}
-                            />
-                        </div>
-                        <div className="space-y-1">
-                            <label className="text-sm font-medium">To</label>
-                            <input
-                                type="date"
-                                className="w-full px-2 py-1 text-sm border rounded"
-                                value={value?.to || ''}
-                                onChange={(e) => handleDateRangeChange(column, 'to', e.target.value)}
-                            />
-                        </div>
-                    </div>
-                );
-
-            default:
-                const uniqueValues = getUniqueValues(column);
-                return uniqueValues.length > 0 ? (
-                    <div className="p-2">
-                        <FilterSelect
-                            value={value || ''}
-                            onChange={(newValue) => handleFilterChange(column, newValue)}
-                        >
-                            <SelectItem value="">All</SelectItem>
-                            {uniqueValues.map(val => (
-                                <SelectItem key={val} value={val}>
-                                    {val}
-                                </SelectItem>
-                            ))}
-                        </FilterSelect>
-                    </div>
-                ) : (
-                    <div className="p-2">
-                        <input
-                            type="text"
-                            className="w-full px-2 py-1 text-sm border rounded"
-                            placeholder={`Filter ${column}...`}
-                            value={value || ''}
-                            onChange={(e) => handleFilterChange(column, e.target.value)}
-                        />
-                    </div>
-                );
-        }
-    };
-
-    const columns = [
-        'Market',
-        'Client/Sponsor',
-        'Project',
-        'Due Date',
-        'Task',
-        'Complete',
-        'Team',
-        'ME',
-        'Deployment',
-        'Notes'
-    ];
-
-    return (
-        <div className="filters-container">
-            {columns.map(header => {
-                const column = header.toLowerCase().replace(/\//g, '');
-                const hasFilter = filters[column] !== undefined && filters[column] !== null;
-                
-                return (
-                    <Popover key={column}>
-                        <PopoverTrigger asChild>
-                            <button 
-                                className={`filter-button ${hasFilter ? 'active' : ''}`}
-                                title={`Filter ${header}`}
-                            >
-                                <FilterIcon size={14} />
-                            </button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-52" align="start">
-                            <div className="text-sm font-medium pb-2 px-2">
-                                Filter {header}
-                            </div>
-                            {renderFilterContent(column)}
-                            {hasFilter && (
-                                <div className="pt-2 px-2">
-                                    <button
-                                        className="text-xs text-red-600 hover:text-red-700"
-                                        onClick={() => handleFilterChange(column, null)}
-                                    >
-                                        Clear filter
-                                    </button>
-                                </div>
-                            )}
-                        </PopoverContent>
-                    </Popover>
-                );
-            })}
-        </div>
-    );
+    return null; 
 };
 
 export const applyFilters = (data, filters, searchTerm) => {
-    return data.filter(row => {
-        const matchesSearch = !searchTerm || Object.values(row).some(value =>
-            String(value).toLowerCase().includes(searchTerm.toLowerCase())
-        );
+    if (Object.keys(filters).length === 0 && !searchTerm) {
+        return data;
+    }
 
-        const matchesFilters = Object.entries(filters).every(([column, filterValue]) => {
-            if (!filterValue) return true;
+    return data.filter(row => {
+        const matchesSearch = !searchTerm || 
+            Object.entries(row).some(([key, value]) => {
+                if (value === null || value === undefined || typeof value === 'object') {
+                    return false;
+                }
+                return String(value).toLowerCase().includes(searchTerm.toLowerCase());
+            });
+
+        if (!matchesSearch) {
+            return false;
+        }
+
+        return Object.entries(filters).every(([column, filterValue]) => {
+            if (filterValue === null || filterValue === undefined) {
+                return true;
+            }
 
             const type = getColumnType(column);
+            const value = row[column];
+
             switch (type) {
                 case 'boolean':
-                    return row[column] === filterValue;
+                    if (column === 'complete') {
+                        const rowValue = typeof value === 'boolean' ? value : Boolean(value);
+                        const filterVal = typeof filterValue === 'boolean' ? filterValue : 
+                                        filterValue === 'true' ? true : false;
+                        
+                        return rowValue === filterVal;
+                    }
+                    return value === filterValue;
 
                 case 'date': {
-                    const rowDate = new Date(row[column]);
-                    const fromDate = filterValue.from ? new Date(filterValue.from) : null;
-                    const toDate = filterValue.to ? new Date(filterValue.to) : null;
-
-                    if (fromDate && toDate) {
-                        return rowDate >= fromDate && rowDate <= toDate;
-                    } else if (fromDate) {
-                        return rowDate >= fromDate;
-                    } else if (toDate) {
-                        return rowDate <= toDate;
+                    if (!value) return false;
+                    
+                    console.log('Filtering date:', value);
+                    console.log('Filter range:', filterValue);
+                    
+                    try {
+                        let rowDate;
+                        
+                        if (typeof value === 'string') {
+                            if (value.includes('T')) {
+                                rowDate = new Date(value.split('T')[0]);
+                            } else if (value.match(/^\d{4}-\d{2}-\d{2}$/)) {
+                                rowDate = new Date(value);
+                            } else {
+                                rowDate = new Date(value);
+                            }
+                        } else {
+                            rowDate = new Date(value);
+                        }
+                        
+                        rowDate.setHours(0, 0, 0, 0);
+                        
+                        let fromDate = null;
+                        if (filterValue.from) {
+                            fromDate = new Date(filterValue.from);
+                            fromDate.setHours(0, 0, 0, 0);
+                        }
+                        
+                        let toDate = null;
+                        if (filterValue.to) {
+                            toDate = new Date(filterValue.to);
+                            toDate.setHours(23, 59, 59, 999);
+                        }
+                        
+                        const rowTimestamp = rowDate.getTime();
+                        const fromTimestamp = fromDate ? fromDate.getTime() : null;
+                        const toTimestamp = toDate ? toDate.getTime() : null;
+                        
+                        console.log('Row date timestamp:', rowTimestamp);
+                        console.log('From timestamp:', fromTimestamp);
+                        console.log('To timestamp:', toTimestamp);
+                        
+                        if (fromTimestamp && toTimestamp) {
+                            return rowTimestamp >= fromTimestamp && rowTimestamp <= toTimestamp;
+                        } else if (fromTimestamp) {
+                            return rowTimestamp >= fromTimestamp;
+                        } else if (toTimestamp) {
+                            return rowTimestamp <= toTimestamp;
+                        }
+                        
+                        return true;
+                    } catch (error) {
+                        console.error('Error filtering date:', error);
+                        return false;
                     }
-                    return true;
                 }
 
+                case 'select':
+                case 'text':
                 default:
-                    return String(row[column])
+                    return value && String(value)
                         .toLowerCase()
                         .includes(String(filterValue).toLowerCase());
             }
         });
-
-        return matchesSearch && matchesFilters;
     });
 };
 

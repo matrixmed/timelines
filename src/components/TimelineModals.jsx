@@ -1,15 +1,5 @@
-import React from 'react';
-import {
-    AlertDialog,
-    AlertDialogAction,
-    AlertDialogCancel,
-    AlertDialogContent,
-    AlertDialogDescription,
-    AlertDialogFooter,
-    AlertDialogHeader,
-    AlertDialogTitle,
-} from "./ui/alert-dialog";
-import { useTimeline } from './TimelineProvider'; // Changed this import
+import React, { useState, useEffect } from 'react';
+import { useTimeline } from './TimelineProvider';
 
 export const DeleteConfirmationModal = ({ 
     isOpen, 
@@ -17,6 +7,18 @@ export const DeleteConfirmationModal = ({
     rowToDelete, 
     onConfirm 
 }) => {
+    useEffect(() => {
+        if (isOpen) {
+            document.body.style.overflow = 'hidden';
+        } else {
+            document.body.style.overflow = 'auto';
+        }
+        
+        return () => {
+            document.body.style.overflow = 'auto';
+        };
+    }, [isOpen]);
+
     const formatDate = (dateStr) => {
         if (!dateStr) return '';
         const date = new Date(dateStr);
@@ -28,47 +30,59 @@ export const DeleteConfirmationModal = ({
         });
     };
 
+    if (!isOpen || !rowToDelete) {
+        return null;
+    }
+
+    const handleContentClick = (e) => {
+        e.stopPropagation();
+    };
+
     return (
-        <AlertDialog open={isOpen} onOpenChange={onClose}>
-            <AlertDialogContent className="sm:max-w-[425px]">
-                <AlertDialogHeader>
-                    <AlertDialogTitle>Confirm Deletion</AlertDialogTitle>
-                    <AlertDialogDescription>
-                        Are you sure you want to delete this row? This action cannot be undone.
-                        {rowToDelete && (
-                            <div className="mt-4 p-3 bg-gray-50 rounded-md space-y-2">
-                                <div className="grid grid-cols-3 gap-2">
-                                    <div className="font-medium">Market:</div>
-                                    <div className="col-span-2">{rowToDelete.market || '-'}</div>
-                                </div>
-                                <div className="grid grid-cols-3 gap-2">
-                                    <div className="font-medium">Due Date:</div>
-                                    <div className="col-span-2">{formatDate(rowToDelete.dueDate)}</div>
-                                </div>
-                                <div className="grid grid-cols-3 gap-2">
-                                    <div className="font-medium">Task:</div>
-                                    <div className="col-span-2">{rowToDelete.task || '-'}</div>
-                                </div>
-                            </div>
-                        )}
-                    </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                    <AlertDialogCancel onClick={onClose}>Cancel</AlertDialogCancel>
-                    <AlertDialogAction 
+        <div className="modal-overlay" onClick={onClose}>
+            <div className="modal-dialog" onClick={handleContentClick}>
+                <div className="modal-header">
+                    <h3 className="modal-title">Confirm Deletion</h3>
+                    <button className="modal-close" onClick={onClose}>×</button>
+                </div>
+                <div className="modal-content">
+                    <p>Are you sure you want to delete this row? This action cannot be undone.</p>
+                    <div className="modal-info-box">
+                        <div className="modal-info-row">
+                            <div className="modal-info-label">Market:</div>
+                            <div>{rowToDelete.market || '-'}</div>
+                        </div>
+                        <div className="modal-info-row">
+                            <div className="modal-info-label">Due Date:</div>
+                            <div>{formatDate(rowToDelete.dueDate)}</div>
+                        </div>
+                        <div className="modal-info-row">
+                            <div className="modal-info-label">Task:</div>
+                            <div>{rowToDelete.task || '-'}</div>
+                        </div>
+                    </div>
+                </div>
+                <div className="modal-footer">
+                    <button 
+                        className="modal-button cancel-button" 
+                        onClick={onClose}
+                    >
+                        Cancel
+                    </button>
+                    <button 
+                        className="modal-button delete-button" 
                         onClick={onConfirm}
-                        className="bg-red-600 hover:bg-red-700 text-white"
                     >
                         Delete
-                    </AlertDialogAction>
-                </AlertDialogFooter>
-            </AlertDialogContent>
-        </AlertDialog>
+                    </button>
+                </div>
+            </div>
+        </div>
     );
 };
 
 export const TimelineModals = () => {
-    const [modalState, setModalState] = React.useState({
+    const [modalState, setModalState] = useState({
         type: null,
         isOpen: false,
         data: null
@@ -82,8 +96,16 @@ export const TimelineModals = () => {
 
     const handleDeleteConfirm = async () => {
         if (modalState.data) {
-            await deleteRow(modalState.data.id);
-            handleModalClose();
+            try {
+                console.log("Attempting to delete row with ID:", modalState.data.id);
+                
+                handleModalClose();
+                
+                await deleteRow(modalState.data.id);
+                
+            } catch (error) {
+                console.error("Delete operation failed:", error);
+            }
         }
     };
 
@@ -97,15 +119,13 @@ export const TimelineModals = () => {
 
     return {
         openDeleteModal,
-        modals: (
-            <>
-                <DeleteConfirmationModal
-                    isOpen={modalState.type === 'delete' && modalState.isOpen}
-                    onClose={handleModalClose}
-                    rowToDelete={modalState.data}
-                    onConfirm={handleDeleteConfirm}
-                />
-            </>
+        DeleteModal: () => (
+            <DeleteConfirmationModal
+                isOpen={modalState.type === 'delete' && modalState.isOpen}
+                onClose={handleModalClose}
+                rowToDelete={modalState.data}
+                onConfirm={handleDeleteConfirm}
+            />
         )
     };
 };

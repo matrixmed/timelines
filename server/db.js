@@ -34,17 +34,6 @@ async function initializeDb() {
     `);
     
     await db.exec(`
-        PRAGMA table_info(timelines);
-    `).then(async (columns) => {
-        if (!columns.some(col => col.name === 'missedDeadline')) {
-            await db.exec(`
-                ALTER TABLE timelines 
-                ADD COLUMN missedDeadline BOOLEAN DEFAULT 0;
-            `);
-        }
-    });
-
-    await db.exec(`
         CREATE TRIGGER IF NOT EXISTS update_timestamp 
         AFTER UPDATE ON timelines
         BEGIN
@@ -59,6 +48,12 @@ async function initializeDb() {
 async function importCsv(filepath) {
     const db = await getDb();
     
+    const existingCount = await db.get('SELECT COUNT(*) as count FROM timelines');
+    if (existingCount.count > 0) {
+        console.log(`Database already contains ${existingCount.count} records. Skipping import.`);
+        return;
+    }
+    
     const fileContent = fs.readFileSync(filepath, 'utf-8');
     const { data } = Papa.parse(fileContent, {
         header: true,
@@ -68,6 +63,7 @@ async function importCsv(filepath) {
                 .replace('Client/Sponsor', 'clientSponsor')
                 .replace('Due Date', 'dueDate')
                 .replace('ME', 'me')
+                .replace('Missed Deadline', 'missedDeadline')
                 .replace(/\s+/g, '')
                 .replace(/^./, str => str.toLowerCase());
         }
@@ -76,8 +72,8 @@ async function importCsv(filepath) {
     const stmt = await db.prepare(`
         INSERT INTO timelines (
             market, clientSponsor, project, dueDate, task,
-            complete, team, me, deployment, notes
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            complete, team, me, deployment, notes, missedDeadline
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `);
     
     for (const row of data) {
@@ -91,7 +87,8 @@ async function importCsv(filepath) {
             row.team,
             row.me,
             row.deployment || '',
-            row.notes || ''
+            row.notes || '',
+            row.missedDeadline === 'TRUE' ? 1 : 0
         ]);
     }
     

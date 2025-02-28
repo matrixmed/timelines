@@ -1,24 +1,16 @@
-// ColorConfig.js
-
-// Helper function to safely get contrast text color
 const getContrastText = (bgColor) => {
-    // Return default color if no background color is provided
     if (!bgColor) return '#000000';
 
     try {
-        // Convert hex to RGB
         const hex = bgColor.replace('#', '');
         const r = parseInt(hex.substr(0, 2), 16);
         const g = parseInt(hex.substr(2, 2), 16);
         const b = parseInt(hex.substr(4, 2), 16);
         
-        // Calculate relative luminance
         const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
         
-        // Return black for light backgrounds, white for dark backgrounds
         return luminance > 0.5 ? '#000000' : '#FFFFFF';
     } catch (e) {
-        // Return default color if any error occurs
         return '#000000';
     }
 };
@@ -28,10 +20,10 @@ export const marketColors = {
     'Bariatrics': '#F3E5F5',     // Soft purple
     'Dermatology': '#E3F2FD',    // Soft blue
     'Neurology': '#E8F5E9',      // Soft green
-    'NHR': '#FFF3E0',           // Soft orange
-    'Oncology': '#FCE4EC',      // Soft pink
-    'Ophthalmology': '#E0F7FA', // Soft cyan
-    'Other': '#ECEFF1'          // Soft gray-blue
+    'NHR': '#FFF3E0',            // Soft orange
+    'Oncology': '#FCE4EC',       // Soft pink
+    'Ophthalmology': '#E0F7FA',  // Soft cyan
+    'Other': '#ECEFF1'           // Soft gray-blue
 };
 
 // Client Colors - Using stronger, branded-looking colors
@@ -58,7 +50,7 @@ export const clientColors = {
     'Lilly/Verzenio': '#FF69B4',      // Hot pink
     'Medtronic/Signia': '#93C47D',    // Forest green
     'None': '#FFFFFF',                // White
-    'Ortho/Cabtreo': '#F6B26B',      // Light orange
+    'Ortho/Cabtreo': '#F6B26B',       // Light orange
     'Skinbetter': '#87CEEB',          // Sky blue
     'Skinceuticals': '#76A5AF',       // Steel blue
     'Sun/Winlevi': '#FFA07A'          // Light salmon
@@ -103,12 +95,10 @@ export const statusColors = {
     completed: '#F1F8F1'         // Light green for completed items
 };
 
-// Helper function to safely get color
 const getColor = (colorMap, key) => {
     return colorMap[key] || null;
 };
 
-// Export everything as a configuration object
 export const colorConfig = {
     markets: marketColors,
     clients: clientColors,

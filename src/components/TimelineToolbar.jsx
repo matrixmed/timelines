@@ -1,24 +1,31 @@
 import React, { useState } from 'react';
-import { Plus, Search, Download, Filter as FilterIcon } from 'lucide-react';
+import { Plus, Search, Download, Filter as FilterIcon, Calendar, Table } from 'lucide-react';
 import { useTimeline } from './TimelineProvider';
 import { 
     Tooltip,
     TooltipContent,
     TooltipProvider,
     TooltipTrigger
-} from './ui/tooltip';
+} from "./ui/tooltip";
+import { TimelineFilters, applyFilters } from './TimelineFilters';
 
-export const TimelineToolbar = () => {
+export const TimelineToolbar = ({ currentView, onViewChange }) => {
     const {
         searchTerm,
         setSearchTerm,
         addRow,
-        data
+        data,
+        filters,
+        setFilters
     } = useTimeline();
 
     const [showFilters, setShowFilters] = useState(false);
+    
+    const activeFilterCount = Object.keys(filters).length;
 
     const handleExport = () => {
+        const filteredData = applyFilters(data, filters, searchTerm);
+        
         const headers = [
             'Market',
             'Client/Sponsor',
@@ -29,22 +36,24 @@ export const TimelineToolbar = () => {
             'Team',
             'ME',
             'Deployment',
-            'Notes'
+            'Notes',
+            'Missed Deadline'
         ];
 
         const csvContent = [
             headers.join(','),
-            ...data.map(row => [
-                row.market,
-                row.clientSponsor,
-                row.project,
-                row.dueDate,
-                `"${row.task?.replace(/"/g, '""') || ''}"`,
+            ...filteredData.map(row => [
+                row.market || '',
+                row.clientSponsor || '',
+                row.project || '',
+                row.dueDate || '',
+                `"${(row.task || '').replace(/"/g, '""')}"`,
                 row.complete ? 'TRUE' : 'FALSE',
-                row.team,
-                row.me,
-                row.deployment,
-                `"${row.notes?.replace(/"/g, '""') || ''}"`
+                row.team || '',
+                row.me || '',
+                row.deployment || '',
+                `"${(row.notes || '').replace(/"/g, '""')}"`,
+                row.missedDeadline ? 'TRUE' : 'FALSE'
             ].join(','))
         ].join('\n');
 
@@ -59,6 +68,19 @@ export const TimelineToolbar = () => {
         link.click();
         document.body.removeChild(link);
     };
+    
+    const handleAddRow = () => {
+        addRow();
+    };
+    
+    const handleClearFilters = () => {
+        setFilters({});
+        setSearchTerm('');
+    };
+
+    const toggleView = () => {
+        onViewChange(currentView === 'table' ? 'calendar' : 'table');
+    };
 
     return (
         <div className="toolbar sticky">
@@ -66,7 +88,7 @@ export const TimelineToolbar = () => {
                 <TooltipProvider>
                     <Tooltip>
                         <TooltipTrigger asChild>
-                            <button className="toolbar-button" onClick={addRow}>
+                            <button className="toolbar-button" onClick={handleAddRow}>
                                 <Plus size={18} /> New Row
                             </button>
                         </TooltipTrigger>
@@ -83,7 +105,11 @@ export const TimelineToolbar = () => {
                                 className={`toolbar-button ${showFilters ? 'active' : ''}`}
                                 onClick={() => setShowFilters(!showFilters)}
                             >
-                                <FilterIcon size={18} /> Filters
+                                <FilterIcon size={18} /> 
+                                Filters
+                                {activeFilterCount > 0 && (
+                                    <span className="filter-badge">{activeFilterCount}</span>
+                                )}
                             </button>
                         </TooltipTrigger>
                         <TooltipContent>
@@ -91,6 +117,39 @@ export const TimelineToolbar = () => {
                         </TooltipContent>
                     </Tooltip>
                 </TooltipProvider>
+                
+                <TooltipProvider>
+                    <Tooltip>
+                        <TooltipTrigger asChild>
+                            <button 
+                                className="toolbar-button"
+                                onClick={toggleView}
+                            >
+                                {currentView === 'table' ? (
+                                    <>
+                                        <Calendar size={18} /> Calendar
+                                    </>
+                                ) : (
+                                    <>
+                                        <Table size={18} /> Table
+                                    </>
+                                )}
+                            </button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                            Switch to {currentView === 'table' ? 'Calendar' : 'Table'} view
+                        </TooltipContent>
+                    </Tooltip>
+                </TooltipProvider>
+                
+                {activeFilterCount > 0 && (
+                    <button 
+                        className="toolbar-button clear-filters"
+                        onClick={handleClearFilters}
+                    >
+                        Clear All Filters
+                    </button>
+                )}
             </div>
 
             <div className="toolbar-right">
@@ -103,6 +162,15 @@ export const TimelineToolbar = () => {
                         onChange={(e) => setSearchTerm(e.target.value)}
                         className="search-input"
                     />
+                    {searchTerm && (
+                        <button 
+                            className="search-clear-btn"
+                            onClick={() => setSearchTerm('')}
+                            title="Clear search"
+                        >
+                            ×
+                        </button>
+                    )}
                 </div>
 
                 <TooltipProvider>
@@ -121,6 +189,12 @@ export const TimelineToolbar = () => {
                     </Tooltip>
                 </TooltipProvider>
             </div>
+            
+            {showFilters && (
+                <div className="toolbar-filters">
+                    <TimelineFilters />
+                </div>
+            )}
         </div>
     );
 };
