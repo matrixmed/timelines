@@ -1,5 +1,7 @@
-export const markets = ['Bariatrics', 'Dermatology', 'Neurology', 'NHR', 'Oncology', 'Ophthalmology', 'Other'];
-export const clients = [
+import config from '../config';
+
+let markets = ['Bariatrics', 'Dermatology', 'Neurology', 'NHR', 'Oncology', 'Ophthalmology', 'Other'];
+let clients = [
     'AbbVie Skyrizi',
     'AbbVie/Rinvoq',
     'Amgen/Uplizna',
@@ -18,6 +20,7 @@ export const clients = [
     'Genentech/Vabysmo',
     'Incyte/Opzelura',
     'J&J/Carvykti',
+    'LEO/Delgocitinib',
     'Lilly/Kisunla',
     'Lilly/Verzenio',
     'Medtronic/Signia',
@@ -28,7 +31,7 @@ export const clients = [
     'Sun/Winlevi'
 ];
 
-export const projects = [
+let projects = [
     'Biorewind Video Project',
     'BT',
     'Conf Cov: AAD 2025',
@@ -39,6 +42,7 @@ export const projects = [
     'CU Unsponsored',
     'Custom Email',
     'EP AD',
+    'EP CHE',
     'EP GPP',
     'EP Melanoma/SCC',
     'EP NET',
@@ -57,3 +61,50 @@ export const projects = [
     'Patient Edition',
     'Triggered Email'
 ];
+
+export const fetchDropdownOptions = async () => {
+    try {
+        const response = await fetch(`${config.apiUrl}/api/dropdown-options`);
+        if (response.ok) {
+            const data = await response.json();
+            
+            if (data.markets && data.markets.length > 0) {
+                markets = [...new Set([...markets, ...data.markets])].sort();
+            }
+            if (data.clientSponsors && data.clientSponsors.length > 0) {
+                clients = [...new Set([...clients, ...data.clientSponsors])].sort();
+            }
+            if (data.projects && data.projects.length > 0) {
+                projects = [...new Set([...projects, ...data.projects])].sort();
+            }
+        }
+    } catch (error) {
+        console.error('Failed to fetch dropdown options:', error);
+    }
+};
+
+export const addUniqueValue = (type, value) => {
+    if (!value) return;
+    
+    let targetArray;
+    switch (type) {
+        case 'market':
+            targetArray = markets;
+            break;
+        case 'clientSponsor':
+            targetArray = clients;
+            break;
+        case 'project':
+            targetArray = projects;
+            break;
+        default:
+            return;
+    }
+    
+    if (!targetArray.includes(value)) {
+        targetArray.push(value);
+        targetArray.sort();
+    }
+};
+
+export { markets, clients, projects };

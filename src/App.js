@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { TimelineProvider } from './components/TimelineProvider';
 import { TimelineTable } from './components/TimelineTable';
 import { TimelineCalendar } from './components/TimelineCalendar';
@@ -9,18 +9,24 @@ import './styles/table.css';
 import './styles/components.css';
 import './styles/ui.css';
 import './styles/calendar.css';
+import './styles/rowstyles.css';
 
 const TimelineContent = () => {
     const [view, setView] = useState('table');
     const { openDeleteModal, DeleteModal } = TimelineModals();
     
+    const handleDeleteClick = useCallback((row) => {
+        console.log("Delete clicked for row:", row.id);
+        openDeleteModal(row);
+    }, [openDeleteModal]);
+    
     return (
         <div className="timelines-container">
             <TimelineToolbar currentView={view} onViewChange={setView} />
             {view === 'table' ? (
-                <TimelineTable onDeleteClick={openDeleteModal} />
+                <TimelineTable onDeleteClick={handleDeleteClick} />
             ) : (
-                <TimelineCalendar onDeleteClick={openDeleteModal} />
+                <TimelineCalendar onDeleteClick={handleDeleteClick} />
             )}
             <DeleteModal />
         </div>

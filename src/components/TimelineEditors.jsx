@@ -1,27 +1,27 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useMemo } from 'react';
 import { markets, clients, projects } from './fields';
 import { colorConfig } from './ColorConfig';
 
-export const TextEditor = ({ value, onChange, autoFocus, style }) => (
+export const TextEditor = React.memo(({ value, onChange, autoFocus, style }) => (
     <input
-        type="text"
-        value={value || ''}
-        onChange={(e) => onChange(e.target.value)}
-        className="cell-input"
-        style={style}
-        autoFocus={autoFocus}
+      type="text"
+      value={value || ''}
+      onChange={(e) => onChange(e.target.value)}
+      className="cell-input"
+      style={style}
+      autoFocus={autoFocus}
     />
-);
-
-export const TextAreaEditor = ({ value, onChange, autoFocus, style }) => (
+  ));
+  
+  export const TextAreaEditor = React.memo(({ value, onChange, autoFocus, style }) => (
     <textarea
-        value={value || ''}
-        onChange={(e) => onChange(e.target.value)}
-        className="cell-textarea"
-        style={style}
-        autoFocus={autoFocus}
+      value={value || ''}
+      onChange={(e) => onChange(e.target.value)}
+      className="cell-textarea"
+      style={style}
+      autoFocus={autoFocus}
     />
-);
+  ));
 
 export const DateEditor = ({ value, onChange, autoFocus }) => {
     const formatDateForInput = (dateString) => {
@@ -79,50 +79,171 @@ export const DateEditor = ({ value, onChange, autoFocus }) => {
 };
 
 export const SelectEditor = ({ field, value, onChange, autoFocus, style }) => {
-    const getOptions = () => {
-        switch (field) {
-            case 'market': return markets;
-            case 'clientSponsor': return clients;
-            case 'project': return projects;
-            default: return [];
+  const [inputValue, setInputValue] = useState(value || '');
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [filteredOptions, setFilteredOptions] = useState([]);
+  const containerRef = useRef(null);
+  
+  const getOptions = () => {
+    switch (field) {
+      case 'market': return markets;
+      case 'clientSponsor': return clients;
+      case 'project': return projects;
+      default: return [];
+    }
+  };
+  
+  const options = getOptions();
+  
+  useEffect(() => {
+    if (inputValue) {
+      const filtered = options.filter(opt => 
+        opt.toLowerCase().includes(inputValue.toLowerCase())
+      );
+      setFilteredOptions(filtered);
+    } else {
+      setFilteredOptions(options);
+    }
+  }, [inputValue, options]);
+  
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (containerRef.current && !containerRef.current.contains(event.target)) {
+        setIsDropdownOpen(false);
+        
+        if (inputValue && !options.includes(inputValue)) {
+          addNewOption(inputValue);
         }
+      }
     };
-
-    const options = getOptions();
-    const bgColor = value ? colorConfig[`${field}s`]?.[value] : null;
-    const textColor = bgColor ? colorConfig.getContrastText(bgColor) : 'inherit';
-
-    const selectStyle = {
-        ...style,
-        backgroundColor: bgColor || 'white',
-        color: textColor
-    };
-
-    return (
-        <select
-            value={value || ''}
-            onChange={(e) => onChange(e.target.value)}
-            className="cell-select"
-            style={selectStyle}
-            autoFocus={autoFocus}
-        >
-            <option value="">Select {field}</option>
-            {options.map(option => (
-                <option 
-                    key={option} 
-                    value={option}
-                    style={{
-                        backgroundColor: colorConfig[`${field}s`]?.[option] || 'white',
-                        color: colorConfig[`${field}s`]?.[option] 
-                            ? colorConfig.getContrastText(colorConfig[`${field}s`][option])
-                            : 'inherit'
-                    }}
+    
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [inputValue, options]);
+  
+  const addNewOption = (newOption) => {
+    if (!newOption.trim()) return;
+    
+    if (field === 'market' && !markets.includes(newOption)) {
+      markets.push(newOption);
+    } else if (field === 'clientSponsor' && !clients.includes(newOption)) {
+      clients.push(newOption);
+    } else if (field === 'project' && !projects.includes(newOption)) {
+      projects.push(newOption);
+    }
+    
+    onChange(newOption);
+  };
+  
+  const handleInputChange = (e) => {
+    setInputValue(e.target.value);
+    setIsDropdownOpen(true);
+  };
+  
+  const handleOptionClick = (option) => {
+    setInputValue(option);
+    onChange(option);
+    setIsDropdownOpen(false);
+  };
+  
+  const handleInputFocus = () => {
+    setIsDropdownOpen(true);
+  };
+  
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter') {
+      if (inputValue) {
+        const exactMatch = options.find(opt => 
+          opt.toLowerCase() === inputValue.toLowerCase()
+        );
+        
+        if (exactMatch) {
+          setInputValue(exactMatch);
+          onChange(exactMatch);
+        } else {
+          addNewOption(inputValue);
+        }
+      }
+      setIsDropdownOpen(false);
+    } else if (e.key === 'Escape') {
+      setIsDropdownOpen(false);
+    }
+  };
+  
+  const getPlaceholder = () => {
+    switch (field) {
+      case 'clientSponsor': return 'Type to select or add client...';
+      default: return `Type to select or add ${field}...`;
+    }
+  };
+  
+  const getTextStyle = () => {
+    if (!inputValue) return {};
+    
+    const existingOption = options.find(opt => opt === inputValue);
+    if (existingOption) {
+      const colorMap = field === 'market' ? colorConfig.markets :
+                      field === 'clientSponsor' ? colorConfig.clients :
+                      field === 'project' ? colorConfig.projects : null;
+      
+      const bgColor = colorMap?.[existingOption];
+      if (bgColor) {
+        return {
+          color: colorConfig.getContrastText(bgColor)
+        };
+      }
+    }
+    return {};
+  };
+  
+  return (
+    <div className="creatable-select-container" ref={containerRef} style={style}>
+      <input
+        type="text"
+        value={inputValue}
+        onChange={handleInputChange}
+        onFocus={handleInputFocus}
+        onKeyDown={handleKeyDown}
+        placeholder={getPlaceholder()}
+        className="creatable-select-input"
+        style={getTextStyle()}
+        autoFocus={autoFocus}
+      />
+      
+      {isDropdownOpen && (
+        <div className="creatable-select-dropdown">
+          {filteredOptions.length > 0 ? (
+            filteredOptions.map((option) => {
+              const colorMap = field === 'market' ? colorConfig.markets :
+                              field === 'clientSponsor' ? colorConfig.clients :
+                              field === 'project' ? colorConfig.projects : null;
+              
+              const bgColor = colorMap?.[option];
+              const optionStyle = bgColor ? {
+                backgroundColor: bgColor,
+                color: colorConfig.getContrastText(bgColor)
+              } : {};
+              
+              return (
+                <div
+                  key={option}
+                  className="creatable-select-option"
+                  style={optionStyle}
+                  onClick={() => handleOptionClick(option)}
                 >
-                    {option}
-                </option>
-            ))}
-        </select>
-    );
+                  {option}
+                </div>
+              );
+            })
+          ) : (
+            <div className="creatable-select-no-options">
+              <em>No matches. Press Enter to add "{inputValue}"</em>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
 };
 
 export const CheckboxEditor = ({ value, onChange }) => (

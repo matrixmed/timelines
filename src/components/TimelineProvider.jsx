@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useEffect, useState, useCallback, useRef } from 'react';
+import { fetchDropdownOptions } from './fields';
 import io from 'socket.io-client';
 import config from '../config';
 
@@ -74,6 +75,7 @@ export const TimelineProvider = ({ children }) => {
         newSocket.on('timeline-create', socketEvents.current.create);
 
         fetchData();
+        fetchDropdownOptions();
 
         return () => {
             newSocket.off('timeline-update', socketEvents.current.update);
@@ -191,18 +193,18 @@ export const TimelineProvider = ({ children }) => {
         if (!currentRow) return;
 
         setEditedRows(prev => ({
-            ...prev,
-            [rowId]: {
-                ...(prev[rowId] || {}),
-                [field]: value
-            }
+          ...prev,
+          [rowId]: {
+            ...(prev[rowId] || {}),
+            [field]: value
+          }
         }));
-
-        setData(prevData => 
-            prevData.map(row => row.id === rowId ? 
-                { ...row, [field]: value } : 
-                row
-            )
+        
+        setData(prevData =>
+          prevData.map(row => row.id === rowId ?
+            { ...row, [field]: value } :
+            row
+          )
         );
     }, [data]);
 

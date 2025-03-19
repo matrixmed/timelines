@@ -1,5 +1,6 @@
 import React, { useRef, useEffect, useCallback, memo } from 'react';
 import { useTimeline } from './TimelineProvider';
+import NewTimelineRow from './NewTimelineRow';
 import { Check, X, AlertCircle, Trash2 } from 'lucide-react';
 import { markets, clients, projects } from './fields';
 import { colorConfig } from './ColorConfig';
@@ -558,30 +559,15 @@ export const TimelineTable = ({ onDeleteClick }) => {
         <div className="table-container" ref={tableRef}>
             {pendingRows.length > 0 && (
                 <div className="pending-rows-container">
-                    <table className="timelines-table">
-                        <tbody>
-                            {pendingRows.map(row => (
-                                <TableRow 
-                                    key={row.id}
-                                    row={row}
-                                    isPending={true}
-                                    editingCell={editingCell}
-                                    editedRows={editedRows}
-                                    renderActionButtons={renderActionButtons}
-                                    getCellStyle={getCellStyle}
-                                    getColoredContentStyle={getColoredContentStyle}
-                                    getSelectOptions={getSelectOptions}
-                                    getRowStyle={getRowStyle}
-                                    setEditingCell={setEditingCell}
-                                    updateCell={updateCell}
-                                    updatePendingCell={updatePendingCell}
-                                />
-                            ))}
-                        </tbody>
-                    </table>
+                    {pendingRows.map(row => (
+                    <NewTimelineRow 
+                        key={row.id} 
+                        row={row}
+                        onClose={() => removePendingRow(row.id)}
+                    />
+                    ))}
                 </div>
-            )}
-            
+                )}        
             <table className="timelines-table">
                 <thead className="sticky-header">
                     <tr>
