@@ -65,58 +65,66 @@ export const TimelineCalendar = ({ onDeleteClick }) => {
         filteredData.forEach(event => {
             if (!event.dueDate) return;
             
-            let eventDay, eventMonth, eventYear;
-            
-            if (typeof event.dueDate === 'string' && event.dueDate.includes(',')) {
-                const dateParts = event.dueDate.split(',');
-                if (dateParts.length >= 2) {
-                    const monthDayYear = dateParts[1].trim() + (dateParts.length > 2 ? dateParts[2] : '');
-                    const dateObj = new Date(monthDayYear);
-                    
-                    if (!isNaN(dateObj.getTime())) {
-                        eventDay = dateObj.getDate();
-                        eventMonth = dateObj.getMonth();
-                        eventYear = dateObj.getFullYear();
-                    } else {
-                        return; 
-                    }
-                }
-            } 
-            else {
+            const createConsistentDate = (dateValue) => {
+                if (!dateValue) return null;
+                
                 let dateObj;
                 
-                if (typeof event.dueDate === 'string') {
-                    if (event.dueDate.includes('T')) {
-                        dateObj = new Date(event.dueDate);
+                if (typeof dateValue === 'string') {
+                    if (dateValue.match(/^\d{4}-\d{2}-\d{2}$/)) {
+                        const [y, m, d] = dateValue.split('-').map(Number);
+                        return new Date(y, m - 1, d);
+                    } 
+                    else if (dateValue.includes('T')) {
+                        const datePart = dateValue.split('T')[0];
+                        const [y, m, d] = datePart.split('-').map(Number);
+                        return new Date(y, m - 1, d);
                     }
-                    else if (event.dueDate.match(/^\d{4}-\d{2}-\d{2}$/)) {
-                        const [y, m, d] = event.dueDate.split('-').map(Number);
-                        dateObj = new Date(y, m - 1, d);
+                    else if (dateValue.includes(',')) {
+                        dateObj = new Date(dateValue);
+                        return new Date(
+                            dateObj.getFullYear(),
+                            dateObj.getMonth(),
+                            dateObj.getDate()
+                        );
                     }
                     else {
-                        dateObj = new Date(event.dueDate);
+                        dateObj = new Date(dateValue);
+                        return new Date(
+                            dateObj.getFullYear(),
+                            dateObj.getMonth(),
+                            dateObj.getDate()
+                        );
                     }
-                } else if (event.dueDate instanceof Date) {
-                    dateObj = new Date(event.dueDate);
-                } else {
-                    return; 
+                } 
+                else if (dateValue instanceof Date) {
+                    return new Date(
+                        dateValue.getFullYear(),
+                        dateValue.getMonth(),
+                        dateValue.getDate()
+                    );
                 }
                 
-                if (isNaN(dateObj.getTime())) {
-                    return;
-                }
-                
-                eventDay = dateObj.getDate();
-                eventMonth = dateObj.getMonth();
-                eventYear = dateObj.getFullYear();
-            }
+                return null;
+            };
+            
+            const eventDate = createConsistentDate(event.dueDate);
+            if (!eventDate || isNaN(eventDate.getTime())) return;
             
             calendarDays.forEach(day => {
-                const dayDay = day.date.getDate();
-                const dayMonth = day.date.getMonth();
-                const dayYear = day.date.getFullYear();
+                const dayDate = new Date(
+                    day.date.getFullYear(),
+                    day.date.getMonth(),
+                    day.date.getDate()
+                );
                 
-                if (dayDay === eventDay && dayMonth === eventMonth && dayYear === eventYear) {
+                const eventDateForComparison = new Date(
+                    eventDate.getFullYear(),
+                    eventDate.getMonth(),
+                    eventDate.getDate()
+                );
+                
+                if (dayDate.getTime() === eventDateForComparison.getTime()) {
                     day.events.push(event);
                 }
             });
