@@ -11,9 +11,9 @@ export const TextEditor = React.memo(({ value, onChange, autoFocus, style }) => 
       style={style}
       autoFocus={autoFocus}
     />
-  ));
+));
   
-  export const TextAreaEditor = React.memo(({ value, onChange, autoFocus, style }) => (
+export const TextAreaEditor = React.memo(({ value, onChange, autoFocus, style }) => (
     <textarea
       value={value || ''}
       onChange={(e) => onChange(e.target.value)}
@@ -21,19 +21,41 @@ export const TextEditor = React.memo(({ value, onChange, autoFocus, style }) => 
       style={style}
       autoFocus={autoFocus}
     />
-  ));
+));
+
+const fixDateOffset = (dateString) => {
+    if (!dateString) return '';
+    
+    let date;
+    
+    if (dateString instanceof Date) {
+      date = new Date(dateString);
+    } 
+    else if (typeof dateString === 'string') {
+      if (/^\d{4}-\d{2}-\d{2}$/.test(dateString)) {
+        const [year, month, day] = dateString.split('-').map(Number);
+        date = new Date(year, month - 1, day);
+      } else {
+        const parts = new Date(dateString).toISOString().split('T')[0].split('-');
+        date = new Date(+parts[0], +parts[1] - 1, +parts[2]);
+      }
+    } else {
+      return dateString;
+    }
+    
+    return date;
+};
 
 export const DateEditor = ({ value, onChange, autoFocus }) => {
-    const formatDateForInput = (dateString) => {
-        if (!dateString) return '';
+    const formatDateForInput = (dateStr) => {
+        if (!dateStr) return '';
         
         try {
-          if (/^\d{4}-\d{2}-\d{2}$/.test(dateString)) {
-            return dateString;
-          }
+          const date = fixDateOffset(dateStr);
           
-          const date = new Date(dateString);
-          if (isNaN(date.getTime())) return '';
+          if (!(date instanceof Date) || isNaN(date.getTime())) {
+            return '';
+          }
           
           const year = date.getFullYear();
           const month = String(date.getMonth() + 1).padStart(2, '0');
@@ -41,7 +63,7 @@ export const DateEditor = ({ value, onChange, autoFocus }) => {
           
           return `${year}-${month}-${day}`;
         } catch (error) {
-          console.error('Error formatting date for input:', error);
+          console.error('Error formatting input date:', error);
           return '';
         }
     };
@@ -49,20 +71,13 @@ export const DateEditor = ({ value, onChange, autoFocus }) => {
     const handleDateChange = (e) => {
         const selectedDate = e.target.value;
         if (!selectedDate) {
-            onChange('');
-            return;
+          return '';
         }
         
-        try {
-            onChange(selectedDate);
-            
-            console.log('Date selected:', selectedDate);
-            const testDate = new Date(selectedDate);
-            console.log('Converted to Date object:', testDate);
-            console.log('Day of month:', testDate.getDate());
-        } catch (error) {
-            console.error('Error handling date change:', error);
-        }
+        const [year, month, day] = selectedDate.split('-').map(Number);
+        const date = new Date(year, month - 1, day);
+        
+        return date.toISOString().split('T')[0];
     };
 
     return (

@@ -24,15 +24,51 @@ export const CalendarEventPopover = ({ date, events, position, onClose, onDelete
             }
         }
     }, [position]);
+
+    const fixDateOffset = (dateString) => {
+        if (!dateString) return '';
+        
+        let date;
+        
+        if (dateString instanceof Date) {
+          date = new Date(dateString);
+        } 
+        else if (typeof dateString === 'string') {
+          if (/^\d{4}-\d{2}-\d{2}$/.test(dateString)) {
+            const [year, month, day] = dateString.split('-').map(Number);
+            date = new Date(year, month - 1, day);
+          } else {
+            const parts = new Date(dateString).toISOString().split('T')[0].split('-');
+            date = new Date(+parts[0], +parts[1] - 1, +parts[2]);
+          }
+        } else {
+          return dateString;
+        }
+        
+        return date;
+    };
     
-    const formatDate = (dateObj) => {
-        if (!dateObj) return '';
-        return dateObj.toLocaleDateString('en-US', {
+    const formatDate = (dateStr) => {
+        if (!dateStr) return '';
+        
+        try {
+          const date = fixDateOffset(dateStr);
+          
+          if (!(date instanceof Date) || isNaN(date.getTime())) {
+            console.error('Invalid date:', dateStr);
+            return dateStr;
+          }
+          
+          return date.toLocaleDateString('en-US', {
             weekday: 'long',
             year: 'numeric',
             month: 'long',
             day: 'numeric'
-        });
+          });
+        } catch (error) {
+          console.error('Error formatting date:', error);
+          return dateStr;
+        }
     };
     
     const formattedDate = formatDate(date);

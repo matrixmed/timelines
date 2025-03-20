@@ -6,14 +6,37 @@ import { markets, clients, projects } from './fields';
 import { colorConfig } from './ColorConfig';
 import { applyFilters } from './TimelineFilters';
 
+const fixDateOffset = (dateString) => {
+    if (!dateString) return '';
+    
+    let date;
+    
+    if (dateString instanceof Date) {
+      date = new Date(dateString);
+    } 
+    else if (typeof dateString === 'string') {
+      if (/^\d{4}-\d{2}-\d{2}$/.test(dateString)) {
+        const [year, month, day] = dateString.split('-').map(Number);
+        date = new Date(year, month - 1, day);
+      } else {
+        const parts = new Date(dateString).toISOString().split('T')[0].split('-');
+        date = new Date(+parts[0], +parts[1] - 1, +parts[2]);
+      }
+    } else {
+      return dateString;
+    }
+    
+    return date;
+};
+  
 const formatDate = (dateStr) => {
     if (!dateStr) return '';
     
     try {
-      const date = new Date(dateStr);
+      const date = fixDateOffset(dateStr);
       
-      if (isNaN(date.getTime())) {
-        console.error('Invalid date string:', dateStr);
+      if (!(date instanceof Date) || isNaN(date.getTime())) {
+        console.error('Invalid date:', dateStr);
         return dateStr;
       }
       
@@ -24,10 +47,10 @@ const formatDate = (dateStr) => {
         day: 'numeric'
       });
     } catch (error) {
-      console.error('Error formatting date:', error, dateStr);
+      console.error('Error formatting date:', error);
       return dateStr;
     }
-  };
+};
 
 const isInSameWeek = (date1, date2) => {
     const d1 = new Date(date1);
