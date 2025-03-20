@@ -105,7 +105,7 @@ async function importCsv(filepath) {
           row.market || '',
           row.clientSponsor || '',
           row.project || '',
-          row.dueDate ? new Date(row.dueDate) : null,
+          row.dueDate || null,
           row.task || '',
           row.complete === 'TRUE' || row.complete === true,
           row.team || '',
