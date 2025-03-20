@@ -10,30 +10,24 @@ const formatDate = (dateStr) => {
     if (!dateStr) return '';
     
     try {
-        let date;
-        if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
-            const [year, month, day] = dateStr.split('-').map(Number);
-            date = new Date(year, month - 1, day);
-        } else {
-            date = new Date(dateStr);
-        }
-        
-        if (isNaN(date.getTime())) {
-            console.error('Invalid date string:', dateStr);
-            return dateStr;
-        }
-        
-        return date.toLocaleDateString('en-US', {
-            weekday: 'long',
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric'
-        });
-    } catch (error) {
-        console.error('Error formatting date:', error, dateStr);
+      const date = new Date(dateStr);
+      
+      if (isNaN(date.getTime())) {
+        console.error('Invalid date string:', dateStr);
         return dateStr;
+      }
+      
+      return date.toLocaleDateString('en-US', {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      });
+    } catch (error) {
+      console.error('Error formatting date:', error, dateStr);
+      return dateStr;
     }
-};
+  };
 
 const isInSameWeek = (date1, date2) => {
     const d1 = new Date(date1);
