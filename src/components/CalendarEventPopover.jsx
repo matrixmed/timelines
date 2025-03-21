@@ -124,6 +124,10 @@ export const CalendarEventPopover = ({ date, events, position, onClose, onDelete
                                             <span>{event.clientSponsor || '-'}</span>
                                         </div>
                                         <div className="calendar-popover-event-row">
+                                            <span className="calendar-popover-label">Team:</span>
+                                            <span>{event.team || '-'}</span>
+                                        </div>
+                                        <div className="calendar-popover-event-row">
                                             <span className="calendar-popover-label">Task:</span>
                                             <span>{event.task || '-'}</span>
                                         </div>
