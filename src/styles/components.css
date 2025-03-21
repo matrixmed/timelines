@@ -190,7 +190,6 @@
 }
 
 .cell-textarea {
-  max-height: 30px;
   resize: vertical;
   margin-top: 5px;
 }

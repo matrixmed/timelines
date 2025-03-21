@@ -343,12 +343,15 @@
 
 .timelines-table th:nth-child(10),
 .timelines-table td:nth-child(10) {
-  width: 140px;
+  width: 180px;
+  font-size: 12px;
+  padding: 5px;
+  max-height: auto;
 } /* Notes */
 
 .timelines-table th:nth-child(11),
 .timelines-table td:nth-child(11) {
-  width: 80px;
+  width: 60px;
 } /* Actions */
 
 .center {
