@@ -59,10 +59,10 @@ const isInSameWeek = (date1, date2) => {
     d2.setHours(0, 0, 0, 0);
     
     const weekStart1 = new Date(d1);
-    weekStart1.setDate(d1.getDate() - ((d1.getDay() + 6) % 7));
+    weekStart1.setDate(d1.getDate() - d1.getDay());
     
     const weekStart2 = new Date(d2);
-    weekStart2.setDate(d2.getDate() - ((d2.getDay() + 6) % 7));
+    weekStart2.setDate(d2.getDate() - d2.getDay());
     
     return weekStart1.getTime() === weekStart2.getTime();
 };
