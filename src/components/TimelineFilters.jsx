@@ -35,6 +35,44 @@ const getColumnType = (column) => {
     }
 };
 
+function parseAndNormalizeDate(dateValue) {
+    if (!dateValue) return null;
+    
+    if (dateValue instanceof Date) {
+      return new Date(dateValue.getFullYear(), dateValue.getMonth(), dateValue.getDate());
+    }
+    
+    try {
+      let date;
+      
+      if (typeof dateValue === 'string' && dateValue.match(/^\d{4}-\d{2}-\d{2}$/)) {
+        const [year, month, day] = dateValue.split('-').map(Number);
+        date = new Date(year, month - 1, day);
+      }
+      else if (typeof dateValue === 'string' && dateValue.includes(',')) {
+        const parts = dateValue.split(',');
+        if (parts.length >= 2) {
+          const dateStr = parts.slice(1).join(',').trim();
+          date = new Date(dateStr);
+        } else {
+          date = new Date(dateValue);
+        }
+      }
+      else {
+        date = new Date(dateValue);
+      }
+      
+      if (isNaN(date.getTime())) {
+        return null;
+      }
+      
+      return new Date(date.getFullYear(), date.getMonth(), date.getDate());
+    } catch (e) {
+      console.error("Error parsing date:", e);
+      return null;
+    }
+}
+
 export const TimelineFilters = () => {
     const { filters, setFilters, data } = useTimeline();
     
@@ -347,99 +385,28 @@ export const applyFilters = (data, filters, searchTerm) => {
 
                 case 'date': {
                     if (!value) return false;
-                    
+                        
                     try {
-                        let rowDate;
-                        
-                        if (typeof value === 'string') {
-                            if (value.includes(',')) {
-                                const dateParts = value.split(',');
-                                if (dateParts.length >= 2) {
-                                    const monthDayYear = dateParts[1].trim() + (dateParts.length > 2 ? dateParts[2] : '');
-                                    rowDate = new Date(monthDayYear);
-                                } else {
-                                    rowDate = new Date(value);
-                                }
-                            }
-                            else if (value.includes('T')) {
-                                rowDate = new Date(value.split('T')[0] + 'T00:00:00');
-                            }
-                            else if (value.match(/^\d{4}-\d{2}-\d{2}$/)) {
-                                const [y, m, d] = value.split('-').map(Number);
-                                rowDate = new Date(y, m - 1, d);
-                            }
-                            else {
-                                rowDate = new Date(value);
-                            }
-                        } else if (value instanceof Date) {
-                            rowDate = new Date(value);
-                        } else {
-                            return false;
-                        }
-                        
-                        if (isNaN(rowDate.getTime())) {
-                            console.warn('Invalid row date:', value);
-                            return false;
-                        }
-                        
-                        rowDate.setHours(0, 0, 0, 0);
-                        
+                        const rowDate = parseAndNormalizeDate(value);
+                        if (!rowDate) return false;
+                          
                         let fromDate = null;
                         if (filterValue.from && filterValue.from.trim() !== '') {
-                            if (filterValue.from.match(/^\d{4}-\d{2}-\d{2}$/)) {
-                                const [y, m, d] = filterValue.from.split('-').map(Number);
-                                fromDate = new Date(y, m - 1, d);
-                            } else {
-                                fromDate = new Date(filterValue.from);
-                            }
-                            
-                            if (!isNaN(fromDate.getTime())) {
-                                fromDate.setHours(0, 0, 0, 0);
-                            } else {
-                                console.warn('Invalid from date:', filterValue.from);
-                                fromDate = null;
-                            }
+                          fromDate = parseAndNormalizeDate(filterValue.from);
                         }
-                        
+                          
                         let toDate = null;
                         if (filterValue.to && filterValue.to.trim() !== '') {
-                            if (filterValue.to.match(/^\d{4}-\d{2}-\d{2}$/)) {
-                                const [y, m, d] = filterValue.to.split('-').map(Number);
-                                toDate = new Date(y, m - 1, d);
-                            } else {
-                                toDate = new Date(filterValue.to);
-                            }
-                            
-                            if (!isNaN(toDate.getTime())) {
-                                toDate.setHours(23, 59, 59, 999);
-                            } else {
-                                console.warn('Invalid to date:', filterValue.to);
-                                toDate = null;
-                            }
+                          toDate = parseAndNormalizeDate(filterValue.to);
                         }
-                        
-                        console.log({
-                            rowValue: value,
-                            rowDate: rowDate.toISOString(),
-                            rowDateObj: {
-                                year: rowDate.getFullYear(),
-                                month: rowDate.getMonth() + 1,
-                                day: rowDate.getDate()
-                            },
-                            filterFrom: filterValue.from,
-                            filterFromDate: fromDate ? fromDate.toISOString() : null,
-                            filterTo: filterValue.to,
-                            filterToDate: toDate ? toDate.toISOString() : null
-                        });
-                        
+                          
                         if (fromDate && toDate) {
-                            return rowDate >= fromDate && rowDate <= toDate;
+                          return rowDate >= fromDate && rowDate <= toDate;
                         } else if (fromDate) {
-                            return rowDate >= fromDate;
+                          return rowDate >= fromDate;
                         } else if (toDate) {
-                            return rowDate <= toDate;
+                         return rowDate <= toDate;
                         }
-                        
                         return true;
                     } catch (error) {
                         console.error('Error filtering date:', error, value);

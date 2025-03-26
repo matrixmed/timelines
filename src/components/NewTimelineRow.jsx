@@ -3,10 +3,10 @@ import { useTimeline } from './TimelineProvider';
 import CreatableSelect from './CreatableSelect';
 import { markets, clients, projects } from './fields';
 import { colorConfig } from './ColorConfig';
-import { Check, X } from 'lucide-react';
+import { Check, X, Copy } from 'lucide-react';
 
 const NewTimelineRow = ({ onClose, row }) => {
-  const { updatePendingCell, commitPendingRow, removePendingRow } = useTimeline();
+  const { updatePendingCell, commitPendingRow, removePendingRow, addRowWithData } = useTimeline();
   const [formState, setFormState] = useState({
     market: row.market || '',
     clientSponsor: row.clientSponsor || '',
@@ -19,37 +19,27 @@ const NewTimelineRow = ({ onClose, row }) => {
     deployment: row.deployment || '',
     notes: row.notes || '',
   });
-  const [errors, setErrors] = useState({});
+  
   const taskInputRef = useRef(null);
-
+  
   const handleChange = (field, value) => {
     setFormState(prev => ({ ...prev, [field]: value }));
     updatePendingCell(row.id, field, value);
-    
-    if (errors[field]) {
-      setErrors(prev => {
-        const newErrors = { ...prev };
-        delete newErrors[field];
-        return newErrors;
-      });
-    }
   };
-
-  const validateForm = () => {
-    return true;
-  };
-
+  
   const handleSubmit = () => {
-    if (validateForm()) {
-      commitPendingRow(row.id);
-    }
+    commitPendingRow(row.id);
   };
-
+  
   const handleCancel = () => {
     removePendingRow(row.id);
     if (onClose) onClose();
   };
-
+  
+  const handleDuplicate = () => {
+    addRowWithData({ ...formState });
+  };
+  
   const formatDateForInput = (dateString) => {
     if (!dateString) return '';
     
@@ -57,26 +47,27 @@ const NewTimelineRow = ({ onClose, row }) => {
       if (/^\d{4}-\d{2}-\d{2}$/.test(dateString)) {
         return dateString;
       }
-      
       const date = new Date(dateString);
       if (isNaN(date.getTime())) return '';
-      
       const year = date.getFullYear();
       const month = String(date.getMonth() + 1).padStart(2, '0');
       const day = String(date.getDate()).padStart(2, '0');
-      
       return `${year}-${month}-${day}`;
     } catch (error) {
       console.error('Error formatting date for input:', error);
       return '';
     }
   };
-
+  
   return (
     <div className="new-timeline-row">
       <div className="new-timeline-row-header">
         <h3>New Timeline Entry</h3>
         <div className="new-timeline-actions">
+          <button className="new-timeline-button duplicate" onClick={handleDuplicate} title="Duplicate">
+            <Copy size={18} />
+            <span>Duplicate</span>
+          </button>
           <button className="new-timeline-button save" onClick={handleSubmit} title="Save">
             <Check size={18} />
             <span>Save</span>
@@ -87,7 +78,6 @@ const NewTimelineRow = ({ onClose, row }) => {
           </button>
         </div>
       </div>
-      
       <div className="new-timeline-row-content">
         <div className="new-timeline-form">
           <div className="form-row">
@@ -103,7 +93,6 @@ const NewTimelineRow = ({ onClose, row }) => {
                 colorConfig={colorConfig}
               />
             </div>
-            
             <div className="form-group">
               <label className="form-label">Client/Sponsor</label>
               <CreatableSelect
@@ -115,7 +104,6 @@ const NewTimelineRow = ({ onClose, row }) => {
                 colorConfig={colorConfig}
               />
             </div>
-            
             <div className="form-group">
               <label className="form-label">Project</label>
               <CreatableSelect
@@ -129,7 +117,6 @@ const NewTimelineRow = ({ onClose, row }) => {
               />
             </div>
           </div>
-          
           <div className="form-row">
             <div className="form-group date-group">
               <label className="form-label">Due Date</label>
@@ -141,7 +128,6 @@ const NewTimelineRow = ({ onClose, row }) => {
                 className="form-input date-input"
               />
             </div>
-            
             <div className="form-group complete-group">
               <label className="form-label">Complete</label>
               <div className="checkbox-wrapper">
@@ -153,7 +139,6 @@ const NewTimelineRow = ({ onClose, row }) => {
                 />
               </div>
             </div>
-            
             <div className="form-group task-group">
               <label className="form-label">Task</label>
               <textarea
@@ -165,7 +150,6 @@ const NewTimelineRow = ({ onClose, row }) => {
               />
             </div>
           </div>
-          
           <div className="form-row">
             <div className="form-group">
               <label className="form-label">Team</label>
@@ -176,7 +160,6 @@ const NewTimelineRow = ({ onClose, row }) => {
                 className="form-input"
               />
             </div>
-            
             <div className="form-group">
               <label className="form-label">ME</label>
               <input
@@ -186,7 +169,6 @@ const NewTimelineRow = ({ onClose, row }) => {
                 className="form-input"
               />
             </div>
-            
             <div className="form-group">
               <label className="form-label">Deployment</label>
               <input
@@ -197,7 +179,6 @@ const NewTimelineRow = ({ onClose, row }) => {
               />
             </div>
           </div>
-          
           <div className="form-row">
             <div className="form-group full-width">
               <label className="form-label">Notes</label>

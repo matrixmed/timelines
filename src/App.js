@@ -22,6 +22,7 @@ const TimelineContent = () => {
     
     return (
         <div className="timelines-container">
+            <div className="header-shield"></div>
             <TimelineToolbar currentView={view} onViewChange={setView} />
             {view === 'table' ? (
                 <TimelineTable onDeleteClick={handleDeleteClick} />

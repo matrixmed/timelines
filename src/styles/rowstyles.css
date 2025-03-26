@@ -14,6 +14,22 @@
     transition: all 0.2s ease;
     padding: 2px 8px;
   }
+
+  .new-timeline-button.duplicate {
+    background-color: #f0f9ff;
+    color: #0284c7;
+    border: 1px solid #bae6fd;
+  }
+  
+  .new-timeline-button.duplicate:hover {
+    background-color: #e0f2fe;
+    transform: translateY(-1px);
+  }
+  
+  .new-timeline-actions {
+    display: flex;
+    gap: 8px;
+  }
   
   .creatable-select-control.is-open,
   .creatable-select-control:focus-within {
