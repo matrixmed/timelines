@@ -46,10 +46,15 @@
 }
 
 .header-filter-icon {
+  align-items: right;
+  justify-content: right;
+  top: 50%;
+  right: 5px;
+  position: relative;
   display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-left: 8px;
+  z-index: 5;
+  width: 24px;
+  height: 24px;
 }
 
 .header-shield {

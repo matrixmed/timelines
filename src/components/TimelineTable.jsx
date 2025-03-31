@@ -1,10 +1,11 @@
-import React, { useRef, useEffect, useCallback, memo } from 'react';
+import React, { useRef, useEffect, useCallback, memo, useState } from 'react';
 import { useTimeline } from './TimelineProvider';
 import NewTimelineRow from './NewTimelineRow';
 import { Check, X, AlertCircle, Trash2 } from 'lucide-react';
 import { markets, clients, projects } from './fields';
 import { colorConfig } from './ColorConfig';
 import { applyFilters } from './TimelineFilters';
+import config from '../config';
 
 const fixDateOffset = (dateString) => {
     if (!dateString) return '';
@@ -77,20 +78,54 @@ const Cell = memo(({
     onValueChange,
     getCellStyle,
     getColoredContentStyle,
-    getSelectOptions
+    getSelectOptions,
+    commitChanges,
+    cancelChanges,
+    clearEditForField,
+    socket
 }) => {
     const cellStyle = getCellStyle(field, value, row);
+    const [localValue, setLocalValue] = useState(value);
+    const inputRef = useRef(null);
+    
+    useEffect(() => {
+        setLocalValue(value);
+    }, [value]);
+    
+    useEffect(() => {
+        if (isEditing && inputRef.current) {
+            inputRef.current.focus();
+        }
+    }, [isEditing]);
     
     if (isEditing) {
-        const handleChange = (value) => {
-            onValueChange(value);
+        // Auto-save on blur for all fields
+        const handleBlur = () => {
+            if (!isPending) {
+                commitChanges(row.id);
+            }
+        };
+
+        // Handle keyboard events for all fields
+        const handleKeyDown = (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                commitChanges(row.id);
+            } else if (e.key === 'Escape') {
+                e.preventDefault();
+                cancelChanges(row.id);
+            }
         };
 
         const commonProps = {
             autoFocus: true,
-            className: `cell-${field === 'dueDate' ? 'date-input' : field === 'task' || field === 'notes' ? 'textarea' : 'input'}`
+            className: `cell-${field === 'dueDate' ? 'date-input' : field === 'task' || field === 'notes' ? 'textarea' : 'input'}`,
+            ref: inputRef,
+            onBlur: handleBlur,
+            onKeyDown: handleKeyDown
         };
 
+        // Handle dropdown fields (Market, Client/Sponsor, Project)
         if (['market', 'clientSponsor', 'project'].includes(field)) {
             const getDisplayName = (fieldName) => {
                 switch (fieldName) {
@@ -102,11 +137,20 @@ const Cell = memo(({
             return (
                 <div>
                     <select
-                        value={value || ''}
-                        onChange={(e) => handleChange(e.target.value)}
+                        value={localValue || ''}
+                        onChange={(e) => {
+                            const newValue = e.target.value;
+                            setLocalValue(newValue);
+                            onValueChange(newValue);
+                            
+                            // Auto-save dropdown changes immediately
+                            setTimeout(() => {
+                                commitChanges(row.id);
+                            }, 50);
+                        }}
                         className="cell-select"
                         style={cellStyle}
-                        autoFocus
+                        {...commonProps}
                     >
                         <option value="">Select {getDisplayName(field)}</option>
                         {getSelectOptions(field).map(option => (
@@ -117,67 +161,138 @@ const Cell = memo(({
             );
         }
 
+        // Handle complete checkbox
         if (field === 'complete') {
+            const handleCheckboxChange = (e) => {
+                const newValue = e.target.checked;
+                setLocalValue(newValue);
+                onValueChange(newValue);
+                
+                // Immediately save checkbox changes
+                setTimeout(() => {
+                    commitChanges(row.id);
+                }, 50);
+            };
+            
             return (
                 <div>
                     <input
                         type="checkbox"
-                        checked={value || false}
-                        onChange={(e) => handleChange(e.target.checked)}
+                        checked={localValue || false}
+                        onChange={handleCheckboxChange}
                         className="cell-checkbox"
                     />
                 </div>
             );
         }
 
+        // Handle date field
         if (field === 'dueDate') {
             return (
                 <div className="date-picker-container">
                     <input
                         type="date"
-                        value={value || ''}
-                        onChange={(e) => handleChange(e.target.value)}
+                        value={localValue || ''}
+                        onChange={(e) => {
+                            const newValue = e.target.value;
+                            setLocalValue(newValue);
+                            onValueChange(newValue);
+                        }}
                         {...commonProps}
                     />
                 </div>
             );
         }
 
+        // Handle text areas (task, notes)
         if (field === 'task' || field === 'notes') {
             return (
                 <div>
                     <textarea
-                        value={value || ''}
-                        onChange={(e) => handleChange(e.target.value)}
+                        value={localValue || ''}
+                        onChange={(e) => {
+                            const newValue = e.target.value;
+                            setLocalValue(newValue);
+                            onValueChange(newValue);
+                        }}
                         {...commonProps}
                     />
                 </div>
             );
         }
 
+        // Handle all other text fields
         return (
             <div>
                 <input
                     type="text"
-                    value={value || ''}
-                    onChange={(e) => handleChange(e.target.value)}
+                    value={localValue || ''}
+                    onChange={(e) => {
+                        const newValue = e.target.value;
+                        setLocalValue(newValue);
+                        onValueChange(newValue);
+                    }}
                     {...commonProps}
                 />
             </div>
         );
     }
 
+    // Special handling for complete checkbox in view mode
     if (field === 'complete') {
+        // Direct checkbox click handler with immediate save to database
+        const handleCompleteChange = (e) => {
+            const newValue = e.target.checked;
+            
+            // First modify our local state to show the change
+            onValueChange(newValue);
+            
+            // Then immediately save to database without showing any pending UI
+            setTimeout(() => {
+                // Direct API call for completeness change to avoid filtering issues
+                const updateCompletionStatus = async () => {
+                    try {
+                        const updatedRow = {
+                            ...row,
+                            complete: newValue
+                        };
+                        
+                        // Make a direct API call
+                        const response = await fetch(`${config.apiUrl}/api/timelines/${row.id}`, {
+                            method: 'PUT',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(updatedRow)
+                        });
+                        
+                        if (!response.ok) {
+                            throw new Error('Failed to update completion status');
+                        }
+                        
+                        // Emit the socket event for other clients
+                        socket?.emit('update-timeline', updatedRow);
+                        
+                        // Clear any edited state
+                        clearEditForField?.(row.id, 'complete');
+                    } catch (error) {
+                        console.error('Error updating completion status:', error);
+                    }
+                };
+                
+                updateCompletionStatus();
+            }, 10);
+        };
+
         return (
             <input
                 type="checkbox"
                 checked={value || false}
-                onChange={(e) => onValueChange(e.target.checked)}
+                onChange={handleCompleteChange}
                 className="cell-checkbox"
             />
         );
     }
 
+    // Colored styles for certain fields
     const coloredStyle = getColoredContentStyle(field, value);
     
     if (coloredStyle && ['market', 'clientSponsor', 'project'].includes(field)) {
@@ -194,6 +309,7 @@ const Cell = memo(({
         );
     }
     
+    // Default content display
     return (
         <div
             className={`cell-content ${(field === 'task' || field === 'notes') ? 'cell-content-multiline' : ''}`}
@@ -217,7 +333,11 @@ const TableRow = memo(({
     getRowStyle,
     setEditingCell,
     updateCell,
-    updatePendingCell
+    updatePendingCell,
+    commitRowChanges,
+    cancelRowChanges,
+    clearEditForField,
+    socket
 }) => {
     return (
         <tr 
@@ -241,6 +361,10 @@ const TableRow = memo(({
                         getCellStyle={getCellStyle}
                         getColoredContentStyle={getColoredContentStyle}
                         getSelectOptions={getSelectOptions}
+                        commitChanges={commitRowChanges}
+                        cancelChanges={cancelRowChanges}
+                        clearEditForField={clearEditForField}
+                        socket={socket}
                     />
                 </td>
             ))}
@@ -269,7 +393,11 @@ export const TimelineTable = ({ onDeleteClick }) => {
         cancelRowChanges,
         toggleMissedDeadline,
         commitPendingRow,
-        removePendingRow
+        removePendingRow,
+        tableScrollPosition,
+        setTableScrollPosition,
+        clearEditForField,
+        socket
     } = useTimeline();
     
     const filteredData = React.useMemo(() => 
@@ -279,6 +407,22 @@ export const TimelineTable = ({ onDeleteClick }) => {
 
     const tableRef = useRef(null);
     const editingRef = useRef(null);
+
+    // Restore scroll position when component mounts
+    useEffect(() => {
+        if (tableRef.current && tableScrollPosition) {
+            setTimeout(() => {
+                tableRef.current.scrollTop = tableScrollPosition;
+            }, 0);
+        }
+
+        // Save scroll position when component unmounts or view changes
+        return () => {
+            if (tableRef.current) {
+                setTableScrollPosition(tableRef.current.scrollTop);
+            }
+        };
+    }, [setTableScrollPosition, tableScrollPosition]);
 
     useEffect(() => {
         if (!hasScrolledToCurrentWeek && data.length > 0) {
@@ -291,20 +435,18 @@ export const TimelineTable = ({ onDeleteClick }) => {
         const handleClickOutside = (event) => {
             if (editingRef.current && !editingRef.current.contains(event.target)) {
                 if (editingCell) {
-                    if (editingCell.rowId.toString().startsWith('pending-')) {
-
-                    } else if (editedRows[editingCell.rowId]) {
-
-                    } else {
-                        setEditingCell(null);
+                    // Always auto-save on click outside for regular rows
+                    if (!editingCell.rowId.toString().startsWith('pending-')) {
+                        commitRowChanges(editingCell.rowId);
                     }
+                    setEditingCell(null);
                 }
             }
         };
 
         document.addEventListener('mousedown', handleClickOutside);
         return () => document.removeEventListener('mousedown', handleClickOutside);
-    }, [editingCell, editedRows, setEditingCell]);
+    }, [editingCell, setEditingCell, commitRowChanges]);
 
     const columnOrder = [
         'market', 'clientSponsor', 'project', 'dueDate', 'task', 
@@ -337,6 +479,11 @@ export const TimelineTable = ({ onDeleteClick }) => {
                         setEditingCell({ rowId: prevRow.id, field });
                     }
                 } else {
+                    // Auto-save on enter
+                    if (editedRows[rowId]) {
+                        commitRowChanges(rowId);
+                    }
+                    
                     if (currentRowIndex < allRows.length - 1) {
                         const nextRow = allRows[currentRowIndex + 1];
                         setEditingCell({ rowId: nextRow.id, field });
@@ -400,7 +547,7 @@ export const TimelineTable = ({ onDeleteClick }) => {
             default:
                 break;
         }
-    }, [editingCell, columnOrder, pendingRows, filteredData, editedRows, cancelRowChanges, setEditingCell]);
+    }, [editingCell, columnOrder, pendingRows, filteredData, editedRows, cancelRowChanges, setEditingCell, commitRowChanges]);
 
     useEffect(() => {
         document.addEventListener('keydown', handleKeyDown);
@@ -516,21 +663,14 @@ export const TimelineTable = ({ onDeleteClick }) => {
     }, []);
 
     const renderActionButtons = useCallback((row, isPending = false) => {
-        if (isPending || editedRows[row.id]) {
+        // Only show save/cancel buttons for pending (new) rows
+        if (isPending) {
             const handleSave = () => {
-                if (isPending) {
-                    commitPendingRow(row.id);
-                } else {
-                    commitRowChanges(row.id);
-                }
+                commitPendingRow(row.id);
             };
             
             const handleCancel = () => {
-                if (isPending) {
-                    removePendingRow(row.id);
-                } else {
-                    cancelRowChanges(row.id);
-                }
+                removePendingRow(row.id);
             };
             
             return (
@@ -553,6 +693,7 @@ export const TimelineTable = ({ onDeleteClick }) => {
             );
         }
         
+        // For regular rows, only show the missed deadline and delete buttons
         return (
             <div className="action-buttons">
                 <button 
@@ -571,7 +712,7 @@ export const TimelineTable = ({ onDeleteClick }) => {
                 </button>
             </div>
         );
-    }, [editedRows, commitPendingRow, commitRowChanges, removePendingRow, cancelRowChanges, toggleMissedDeadline, onDeleteClick]);
+    }, [commitPendingRow, removePendingRow, toggleMissedDeadline, onDeleteClick]);
 
     return (
         <div className="table-container" ref={tableRef}>
@@ -585,7 +726,7 @@ export const TimelineTable = ({ onDeleteClick }) => {
                     />
                     ))}
                 </div>
-                )}        
+            )}        
             <table className="timelines-table">
                 <thead className="sticky-header">
                     <tr>
@@ -619,6 +760,10 @@ export const TimelineTable = ({ onDeleteClick }) => {
                             setEditingCell={setEditingCell}
                             updateCell={updateCell}
                             updatePendingCell={updatePendingCell}
+                            commitRowChanges={commitRowChanges}
+                            cancelRowChanges={cancelRowChanges}
+                            clearEditForField={clearEditForField}
+                            socket={socket}
                         />
                     ))}
                 </tbody>

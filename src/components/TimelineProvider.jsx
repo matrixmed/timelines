@@ -5,6 +5,21 @@ import config from '../config';
 
 const TimelineContext = createContext(null);
 
+// Load filters from localStorage
+const loadFiltersFromStorage = () => {
+  try {
+    const savedFilters = localStorage.getItem('timelineFilters');
+    const savedSearchTerm = localStorage.getItem('timelineSearchTerm');
+    return { 
+      filters: savedFilters ? JSON.parse(savedFilters) : {},
+      searchTerm: savedSearchTerm || ''
+    };
+  } catch (error) {
+    console.error('Error loading filters from localStorage:', error);
+    return { filters: {}, searchTerm: '' };
+  }
+};
+
 export const useTimeline = () => {
   const context = useContext(TimelineContext);
   if (!context) {
@@ -22,11 +37,34 @@ export const TimelineProvider = ({ children }) => {
   const [pendingRows, setPendingRows] = useState([]);
   const [pendingEdits, setPendingEdits] = useState({});
   const [socket, setSocket] = useState(null);
-  const [filters, setFilters] = useState({});
-  const [searchTerm, setSearchTerm] = useState('');
+  
+  // Load saved filters from localStorage
+  const savedFilterState = loadFiltersFromStorage();
+  const [filters, setFilters] = useState(savedFilterState.filters);
+  const [searchTerm, setSearchTerm] = useState(savedFilterState.searchTerm);
+  
   const [hasScrolledToCurrentWeek, setHasScrolledToCurrentWeek] = useState(false);
+  const [tableScrollPosition, setTableScrollPosition] = useState(0);
   const originalRowData = useRef({});
   const socketEvents = useRef({});
+
+  // Save filters to localStorage whenever they change
+  useEffect(() => {
+    try {
+      localStorage.setItem('timelineFilters', JSON.stringify(filters));
+    } catch (error) {
+      console.error('Error saving filters to localStorage:', error);
+    }
+  }, [filters]);
+
+  // Save search term to localStorage whenever it changes
+  useEffect(() => {
+    try {
+      localStorage.setItem('timelineSearchTerm', searchTerm);
+    } catch (error) {
+      console.error('Error saving search term to localStorage:', error);
+    }
+  }, [searchTerm]);
 
   useEffect(() => {
     const newSocket = io(config.socketUrl);
@@ -65,12 +103,12 @@ export const TimelineProvider = ({ children }) => {
           const newData = [...prevData, newRow];
           originalRowData.current[newRow.id] = { ...newRow };
           return newData.sort((a, b) => {
-          if (!a.dueDate && !b.dueDate) return 0;
-          if (!a.dueDate) return -1;
-          if (!b.dueDate) return 1;
-          
-          return new Date(a.dueDate) - new Date(b.dueDate);
-        });
+            if (!a.dueDate && !b.dueDate) return 0;
+            if (!a.dueDate) return -1;
+            if (!b.dueDate) return 1;
+            
+            return new Date(a.dueDate) - new Date(b.dueDate);
+          });
         });
       }
     };
@@ -234,6 +272,7 @@ export const TimelineProvider = ({ children }) => {
       addUniqueValue(field, value);
     }
     
+    // Update the editedRows state with the new value
     setEditedRows(prev => ({
       ...prev,
       [rowId]: {
@@ -242,24 +281,55 @@ export const TimelineProvider = ({ children }) => {
       }
     }));
     
+    // Update the displayed data immediately
     setData(prevData =>
       prevData.map(row => row.id === rowId ?
         { ...row, [field]: value } :
         row
       )
     );
+    
+    // For checkbox, return true to ensure it stays checked in the UI
+    return true;
   }, [data]);
+
+  // New function to clear edited state for a specific field
+  const clearEditForField = useCallback((rowId, field) => {
+    setEditedRows(prev => {
+      if (!prev[rowId]) return prev;
+      
+      const newEdits = { ...prev[rowId] };
+      delete newEdits[field];
+      
+      if (Object.keys(newEdits).length === 0) {
+        const result = { ...prev };
+        delete result[rowId];
+        return result;
+      }
+      
+      return {
+        ...prev,
+        [rowId]: newEdits
+      };
+    });
+  }, []);
 
   const commitRowChanges = useCallback(async (rowId) => {
     const currentRow = data.find(row => row.id === rowId);
     if (!currentRow) return;
     
+    // Get the current edits for this row
+    const rowEdits = editedRows[rowId] || {};
+    if (Object.keys(rowEdits).length === 0) return; // Nothing to save
+    
     const updatedRow = {
       ...currentRow,
-      ...editedRows[rowId]
+      ...rowEdits
     };
     
     try {
+      console.log("Committing changes for row:", rowId, updatedRow);
+      
       const response = await fetch(`${config.apiUrl}/api/timelines/${rowId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
@@ -268,26 +338,39 @@ export const TimelineProvider = ({ children }) => {
       
       if (!response.ok) throw new Error('Failed to update row');
       
+      // Update our reference to the original data
       originalRowData.current[rowId] = { ...updatedRow };
+      
+      // Notify other clients
       socket?.emit('update-timeline', updatedRow);
       
+      // Update dropdown options if needed
       fetchDropdownOptions();
       
+      // Clear edited state for this row since changes are saved
       setEditedRows(prev => {
         const newState = { ...prev };
         delete newState[rowId];
         return newState;
       });
       
+      // Exit edit mode
       setEditingCell(null);
+      
+      return true;
     } catch (err) {
+      console.error('Error saving changes:', err);
       setError(err.message);
+      
+      // Revert to original data on error
       setData(prevData =>
         prevData.map(row => row.id === rowId ?
           originalRowData.current[rowId] :
           row
         )
       );
+      
+      return false;
     }
   }, [data, editedRows, socket]);
 
@@ -329,6 +412,7 @@ export const TimelineProvider = ({ children }) => {
         missedDeadline: !row.missedDeadline
       };
       
+      // Update UI immediately
       setData(prevData => prevData.map(r =>
         r.id === rowId ? updatedRow : r
       ));
@@ -381,10 +465,13 @@ export const TimelineProvider = ({ children }) => {
     filters,
     searchTerm,
     hasScrolledToCurrentWeek,
+    tableScrollPosition,
+    socket,
     setEditingCell,
     setFilters,
     setSearchTerm,
     setHasScrolledToCurrentWeek,
+    setTableScrollPosition,
     addRow,
     addRowWithData,
     removePendingRow,
@@ -394,7 +481,8 @@ export const TimelineProvider = ({ children }) => {
     commitRowChanges,
     cancelRowChanges,
     deleteRow,
-    toggleMissedDeadline
+    toggleMissedDeadline,
+    clearEditForField
   };
 
   return (
@@ -403,5 +491,3 @@ export const TimelineProvider = ({ children }) => {
     </TimelineContext.Provider>
   );
 };
-
-export default TimelineProvider;
