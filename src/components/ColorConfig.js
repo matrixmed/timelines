@@ -52,7 +52,8 @@ export const clientColors = {
     'Ortho/Cabtreo': '#164e89',  
     'Skinbetter': '#faede1',   
     'Skinceuticals': '#da8585', 
-    'Sun/Winlevi': '#00b5d1e6'  
+    'Sun/Winlevi': '#00b5d1e6',
+    'LEO/Tralo': '#284032'  
 };
 
 export const projectColors = {
@@ -83,7 +84,8 @@ export const projectColors = {
     'NHR': '#4d64a4',
     'NPPA/PIA': '#58327f',                   
     'Patient Edition': '#AF52DE',            
-    'Triggered Email': '#E695F0'             
+    'Triggered Email': '#E695F0',
+    'JCADTV Journal Review': '#006A61'             
 };
 
 export const statusColors = {
