@@ -42,18 +42,22 @@ export const clientColors = {
     'Castle': '#0b4d89',  
     'Exelixis/Cabometyx': '#005689',
     'Genentech/Vabysmo': '#a48aff',  
+    'Genentech/Vabsymo': '#a48aff',
     'Incyte/Opzelura': '#2c2851',  
     'J&J/Carvykti': '#d13b4c',
     'LEO/Delgocitinib': '#204131', 
     'Lilly/Kisunla': '#ffc000',
     'Lilly/Verzenio': '#0078a3', 
+    'Lilly/Imlunestrant': '#d52b1e', 
     'Medtronic/Signia': '#1010eb', 
     'None': '#FFFFFF',
     'Ortho/Cabtreo': '#164e89',  
     'Skinbetter': '#faede1',   
     'Skinceuticals': '#da8585', 
     'Sun/Winlevi': '#00b5d1e6',
-    'LEO/Tralo': '#284032'  
+    'LEO/Tralo': '#284032',
+    'LEO/Delgo': '#75a07f',
+    'BMS/Breyanzi': '#be2bbb',
 };
 
 export const projectColors = {
