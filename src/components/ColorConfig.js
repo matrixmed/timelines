@@ -58,6 +58,7 @@ export const clientColors = {
     'LEO/Tralo': '#284032',
     'LEO/Delgo': '#75a07f',
     'BMS/Breyanzi': '#be2bbb',
+    'Neutrogena': '#8dcddb'
 };
 
 export const projectColors = {
