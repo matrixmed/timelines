@@ -345,7 +345,7 @@ const TableRow = memo(({
             className={`${editedRows[row.id] ? 'row-edited' : ''}`}
         >
             {['market', 'clientSponsor', 'project', 'dueDate', 'task', 
-            'complete', 'team', 'me', 'deployment', 'notes'].map(field => (
+            'complete', 'team', 'me', 'bd', 'deployment', 'notes'].map(field => (
                 <td key={field} className={`cell ${field === 'complete' ? 'center' : ''}`}>
                     <Cell 
                         field={field}
@@ -449,8 +449,8 @@ export const TimelineTable = ({ onDeleteClick }) => {
     }, [editingCell, setEditingCell, commitRowChanges]);
 
     const columnOrder = [
-        'market', 'clientSponsor', 'project', 'dueDate', 'task', 
-        'complete', 'team', 'me', 'deployment', 'notes'
+        'market', 'clientSponsor', 'project', 'dueDate', 'task',
+        'complete', 'team', 'me', 'bd', 'deployment', 'notes'
     ];
 
     const handleKeyDown = useCallback((e) => {
@@ -731,7 +731,7 @@ export const TimelineTable = ({ onDeleteClick }) => {
                 <thead className="sticky-header">
                     <tr>
                         {['Market', 'Client/Sponsor', 'Project', 'Due Date', 'Task', 'Complete', 
-                        'Team', 'ME', 'Deployment', 'Notes', 'Actions'].map(header => (
+                        'Team', 'ME', 'BD', 'Deployment', 'Notes', 'Actions'].map(header => (
                             <th key={header}>
                                 <div className="header-content">
                                     <span className="header-text">{header}</span>

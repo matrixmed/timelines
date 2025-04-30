@@ -165,6 +165,7 @@ export const TimelineProvider = ({ children }) => {
       complete: false,
       team: '',
       me: '',
+      bd: '',
       deployment: '',
       notes: '',
       missedDeadline: false
@@ -187,6 +188,7 @@ export const TimelineProvider = ({ children }) => {
       complete: initialData.complete || false,
       team: initialData.team || '',
       me: initialData.me || '',
+      bd: initialData.bd || '',
       deployment: initialData.deployment || '',
       notes: initialData.notes || '',
       missedDeadline: false

@@ -41,21 +41,18 @@ router.get('/timelines', async (req, res) => {
 
 router.post('/timelines', async (req, res) => {
   const db = await getDb();
-
-  const { market, clientSponsor, project, dueDate, task, complete, team, me, deployment,
-    notes, missedDeadline } = req.body;
+  const { market, clientSponsor, project, dueDate, task, complete, team, me, bd, deployment,
+          notes, missedDeadline } = req.body;
   try {
     const result = await db.query(`
       INSERT INTO timelines (
         market, clientSponsor, project, dueDate, task,
-        complete, team, me, deployment, notes, missedDeadline
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+        complete, team, me, bd, deployment, notes, missedDeadline
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
       RETURNING *
-    `, [market, clientSponsor, project, dueDate, task, complete, team, me, deployment,
-      notes, missedDeadline || false]);
-    
+    `, [market, clientSponsor, project, dueDate, task, complete, team, me, bd, deployment,
+        notes, missedDeadline || false]);
     const transformedRow = transformColumnNames([result.rows[0]])[0];
-    
     res.json(transformedRow);
   } catch (error) {
     console.error('Error creating timeline:', error);
@@ -68,25 +65,22 @@ router.put('/timelines/:id', async (req, res) => {
   const { id } = req.params;
   const {
     market, clientSponsor, project, dueDate, task,
-    complete, team, me, deployment, notes, missedDeadline
+    complete, team, me, bd, deployment, notes, missedDeadline
   } = req.body;
   try {
     const result = await db.query(`
       UPDATE timelines
       SET market = $1, clientSponsor = $2, project = $3, dueDate = $4,
-        task = $5, complete = $6, team = $7, me = $8, deployment = $9,
-        notes = $10, missedDeadline = $11
-      WHERE id = $12
+          task = $5, complete = $6, team = $7, me = $8, bd = $9, deployment = $10,
+          notes = $11, missedDeadline = $12
+      WHERE id = $13
       RETURNING *
     `, [market, clientSponsor, project, dueDate, task, complete,
-      team, me, deployment, notes, missedDeadline, id]);
-    
-    const transformedRow = result.rows.length > 0 
-      ? transformColumnNames([result.rows[0]])[0] 
+        team, me, bd, deployment, notes, missedDeadline, id]);
+    const transformedRow = result.rows.length > 0
+      ? transformColumnNames([result.rows[0]])[0]
       : { success: true };
-    
     res.json(transformedRow);
-    
     if (io) {
       io.to('timelines').emit('timeline-update', transformedRow);
     }

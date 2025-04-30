@@ -16,6 +16,7 @@ const NewTimelineRow = ({ onClose, row }) => {
     complete: row.complete || false,
     team: row.team || '',
     me: row.me || '',
+    bd: row.bd || '',
     deployment: row.deployment || '',
     notes: row.notes || '',
   });
@@ -166,6 +167,15 @@ const NewTimelineRow = ({ onClose, row }) => {
                 type="text"
                 value={formState.me}
                 onChange={(e) => handleChange('me', e.target.value)}
+                className="form-input"
+              />
+            </div>
+            <div className="form-group">
+              <label className="form-label">BD</label>
+              <input
+                type="text"
+                value={formState.bd}
+                onChange={(e) => handleChange('bd', e.target.value)}
                 className="form-input"
               />
             </div>

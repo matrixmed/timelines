@@ -25,6 +25,7 @@ async function initializeDb() {
         complete BOOLEAN DEFAULT FALSE,
         team TEXT,
         me TEXT,
+        bd TEXT,
         deployment TEXT,
         notes TEXT,
         missedDeadline BOOLEAN DEFAULT FALSE,
@@ -99,8 +100,8 @@ async function importCsv(filepath) {
         await client.query(`
           INSERT INTO timelines (
             market, clientSponsor, project, dueDate, task,
-            complete, team, me, deployment, notes, missedDeadline
-          ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+            complete, team, me, bd, deployment, notes, missedDeadline
+          ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
         `, [
           row.market || '',
           row.clientSponsor || '',
@@ -110,6 +111,7 @@ async function importCsv(filepath) {
           row.complete === 'TRUE' || row.complete === true,
           row.team || '',
           row.me || '',
+          row.bd || '',
           row.deployment || '',
           row.notes || '',
           row.missedDeadline === 'TRUE' || row.missedDeadline === true
