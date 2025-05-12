@@ -55,7 +55,7 @@ export const clientColors = {
     'Skinbetter': '#faede1',   
     'Skinceuticals': '#da8585', 
     'Sun/Winlevi': '#00b5d1e6',
-    'LEO/Tralo': '#284032',
+    'LEO/Adbry': '#284032',
     'LEO/Delgo': '#75a07f',
     'BMS/Breyanzi': '#be2bbb',
     'Neutrogena': '#8dcddb'
