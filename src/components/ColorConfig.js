@@ -43,6 +43,7 @@ export const clientColors = {
     'Exelixis/Cabometyx': '#005689',
     'Genentech/Vabysmo': '#a48aff',  
     'Genentech/Vabsymo': '#a48aff',
+    'Genentech/Phesgo': '#D884F0',
     'Incyte/Opzelura': '#2c2851',  
     'J&J/Carvykti': '#d13b4c',
     'LEO/Delgocitinib': '#204131', 
@@ -93,7 +94,8 @@ export const projectColors = {
     'NPPA/PIA': '#58327f',                   
     'Patient Edition': '#AF52DE',            
     'Triggered Email': '#E695F0',
-    'JCADTV Journal Review': '#006A61'             
+    'JCADTV Journal Review': '#006A61',
+    'Show Dailies': '#C3D6EC'             
 };
 
 export const statusColors = {
