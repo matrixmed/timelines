@@ -28,7 +28,7 @@ export const TimelineToolbar = ({ currentView, onViewChange }) => {
         
         const headers = [
             'Market',
-            'Client/Sponsor',
+            'Client/Brand',
             'Project',
             'Due Date',
             'Task',

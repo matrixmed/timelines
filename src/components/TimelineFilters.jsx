@@ -4,7 +4,7 @@ import { useTimeline } from './TimelineProvider';
 const normalizeColumnName = (column) => {
     const columnMapping = {
         'Market': 'market',
-        'Client/Sponsor': 'clientSponsor',
+        'Client/Brand': 'clientSponsor',
         'Project': 'project',
         'Due Date': 'dueDate',
         'Task': 'task',
@@ -357,7 +357,7 @@ export const TimelineFilters = () => {
     const attachFilterButtons = useCallback(() => {
         const columns = [
             'Market',
-            'Client/Sponsor',
+            'Client/Brand',
             'Project',
             'Due Date',
             'Task',

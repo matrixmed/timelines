@@ -556,17 +556,6 @@ export const TimelineTable = ({ onDeleteClick }) => {
         };
     }, [handleKeyDown]);
 
-    const getCellHighlightStyle = (rowId, field) => {
-        if (editingCell && editingCell.rowId === rowId && editingCell.field === field) {
-            return {
-                outline: '2px solid var(--primary)',
-                outlineOffset: '-2px',
-                backgroundColor: 'var(--primary-light)'
-            };
-        }
-        return {};
-    };
-
     const scrollToCurrentWeek = useCallback(() => {
         if (!tableRef.current) return;
         
@@ -663,7 +652,6 @@ export const TimelineTable = ({ onDeleteClick }) => {
     }, []);
 
     const renderActionButtons = useCallback((row, isPending = false) => {
-        // Only show save/cancel buttons for pending (new) rows
         if (isPending) {
             const handleSave = () => {
                 commitPendingRow(row.id);
@@ -693,7 +681,6 @@ export const TimelineTable = ({ onDeleteClick }) => {
             );
         }
         
-        // For regular rows, only show the missed deadline and delete buttons
         return (
             <div className="action-buttons">
                 <button 
@@ -730,7 +717,7 @@ export const TimelineTable = ({ onDeleteClick }) => {
             <table className="timelines-table">
                 <thead className="sticky-header">
                     <tr>
-                        {['Market', 'Client/Sponsor', 'Project', 'Due Date', 'Task', 'Complete', 
+                        {['Market', 'Client/Brand', 'Project', 'Due Date', 'Task', 'Complete', 
                         'Team', 'ME', 'BD', 'Deployment', 'Notes', 'Actions'].map(header => (
                             <th key={header}>
                                 <div className="header-content">

@@ -95,12 +95,12 @@ const NewTimelineRow = ({ onClose, row }) => {
               />
             </div>
             <div className="form-group">
-              <label className="form-label">Client/Sponsor</label>
+              <label className="form-label">Client/Brand</label>
               <CreatableSelect
                 options={clients}
                 value={formState.clientSponsor}
                 onChange={(value) => handleChange('clientSponsor', value)}
-                placeholder="Select or create client"
+                placeholder="Select or create brand"
                 field="clientSponsor"
                 colorConfig={colorConfig}
               />

@@ -164,7 +164,7 @@ export const CalendarEventPopover = ({ date, events, position, onClose, onDelete
                       <span>{event.market || '-'}</span>
                     </div>
                     <div className="calendar-popover-event-row">
-                      <span className="calendar-popover-label">Client:</span>
+                      <span className="calendar-popover-label">Brand:</span>
                       <span>{event.clientSponsor || '-'}</span>
                     </div>
                     <div className="calendar-popover-event-row">
