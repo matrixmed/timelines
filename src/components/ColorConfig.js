@@ -66,6 +66,8 @@ export const clientColors = {
 };
 
 export const projectColors = {
+    '2H Patient Podcast': '#91a5d0',
+    '2H Patient Video': '#91a5d0',
     'Biorewind Video Project': '#4CB7E4', 
     'BT': '#00984a',   
     'Conf Cov: AAD 2025': '#3D9285',    
