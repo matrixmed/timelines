@@ -51,6 +51,7 @@ export const clientColors = {
     'LEO/Delgocitinib': '#204131', 
     'Lilly/Kisunla': '#ffc000',
     'Lilly/Verzenio': '#0078a3', 
+    'Lilly/EBC': '#00a1a3', 
     'Lilly/Imlunestrant': '#d52b1e', 
     'Medtronic/Signia': '#1010eb', 
     'None': '#FFFFFF',
@@ -60,7 +61,7 @@ export const clientColors = {
     'Sun/Winlevi': '#00b5d1e6',
     'Sun/Leqselvi': '#003763',
     'LEO/Adbry': '#284032',
-    'LEO/Delgo': '#75a07f',
+    'LEO/Anzupgo': '#75a07f',
     'BMS/Breyanzi': '#be2bbb',
     'Neutrogena': '#8dcddb'
 };
@@ -104,7 +105,8 @@ export const projectColors = {
     'Podcast': '#045f1c',     
     'Triggered Email': '#E695F0',
     'JCADTV Journal Review': '#006A61',
-    'Show Dailies': '#C3D6EC'             
+    'Show Dailies': '#C3D6EC',
+    'Webinar- Early Breast Cancer': '#85eeee'             
 };
 
 export const statusColors = {
