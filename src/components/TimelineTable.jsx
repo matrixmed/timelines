@@ -101,6 +101,10 @@ const Cell = memo(({
     if (isEditing) {
         // Auto-save on blur for all fields
         const handleBlur = () => {
+            // Update the actual value when finishing edit
+            if (localValue !== value) {
+                onValueChange(localValue);
+            }
             if (!isPending) {
                 commitChanges(row.id);
             }
@@ -110,6 +114,10 @@ const Cell = memo(({
         const handleKeyDown = (e) => {
             if (e.key === 'Enter' && !e.shiftKey) {
                 e.preventDefault();
+                // Update the actual value when pressing Enter
+                if (localValue !== value) {
+                    onValueChange(localValue);
+                }
                 commitChanges(row.id);
             } else if (e.key === 'Escape') {
                 e.preventDefault();
@@ -141,12 +149,7 @@ const Cell = memo(({
                         onChange={(e) => {
                             const newValue = e.target.value;
                             setLocalValue(newValue);
-                            onValueChange(newValue);
-                            
-                            // Auto-save dropdown changes immediately
-                            setTimeout(() => {
-                                commitChanges(row.id);
-                            }, 50);
+                            // Don't call onValueChange immediately - defer until blur/commit
                         }}
                         className="cell-select"
                         style={cellStyle}
@@ -196,7 +199,7 @@ const Cell = memo(({
                         onChange={(e) => {
                             const newValue = e.target.value;
                             setLocalValue(newValue);
-                            onValueChange(newValue);
+                            // Don't call onValueChange immediately - defer until blur/commit
                         }}
                         {...commonProps}
                     />
@@ -213,7 +216,7 @@ const Cell = memo(({
                         onChange={(e) => {
                             const newValue = e.target.value;
                             setLocalValue(newValue);
-                            onValueChange(newValue);
+                            // Don't call onValueChange immediately - defer until blur/commit
                         }}
                         {...commonProps}
                     />
@@ -230,7 +233,7 @@ const Cell = memo(({
                     onChange={(e) => {
                         const newValue = e.target.value;
                         setLocalValue(newValue);
-                        onValueChange(newValue);
+                        // Don't call onValueChange immediately - defer until blur/commit
                     }}
                     {...commonProps}
                 />
