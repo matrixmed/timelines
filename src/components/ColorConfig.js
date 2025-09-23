@@ -36,6 +36,7 @@ export const clientColors = {
     'AZ/Tagrisso': '#5b305d',   
     'AZ/Truqap': '#250e62', 
     'American Regent/Gvoke VialDx': '#3cb371', 
+    'Bayer/Claritin': '#8192abff', 
     'Beiersdorf/Body': '#92a9cc',   
     'Beiersdorf/Eczema': '#a70531',  
     'BI/Spevigo': '#403a60',   
