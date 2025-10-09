@@ -41,6 +41,7 @@ export const clientColors = {
     'Beiersdorf/Eczema': '#a70531',  
     'BI/Spevigo': '#403a60',   
     'BMS/Breyansi': '#1d428a', 
+    'Bluebird Bio/Lyfgenia': '#0f44d3dc',
     'Castle': '#0b4d89',  
     'Exelixis/Cabometyx': '#005689',
     'Galderma/Nemluvio': '#475ef2',  
