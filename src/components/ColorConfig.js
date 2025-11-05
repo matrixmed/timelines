@@ -55,7 +55,7 @@ export const clientColors = {
     'Lilly/Kisunla': '#ffc000',
     'Lilly/Verzenio': '#0078a3', 
     'Lilly/EBC': '#00a1a3', 
-    'Lilly/Imlunestrant': '#d52b1e', 
+    'Lilly/Inluriyo': '#d52b1e', 
     'Medtronic/Signia': '#1010eb', 
     'None': '#FFFFFF',
     'Ortho/Cabtreo': '#164e89',  
