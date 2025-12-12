@@ -128,8 +128,8 @@ export const projectColors = {
     'Triggered Email': '#E695F0',
     'JCADTV Journal Review': '#006A61',
     'Show Dailies': '#C3D6EC',
-    'Roundtable Videorgba': '#75b1f5ff',
-    'Webinar- Gastrointestinargba': '#8ef3a4ff',
+    'Roundtable Video Series': '#75b1f5ff',
+    'Webinar- Gastrointestinal Cancers': '#8ef3a4ff',
     'Webinar- Early Breast Cancer': '#85eeee'             
 };
 
