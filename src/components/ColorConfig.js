@@ -26,7 +26,7 @@ export const marketColors = {
 };
 
 export const clientColors = {
-    'AbbVie Skyrizi': '#00a3df', 
+    'AbbVie/Skyrizi': '#00a3df', 
     'AbbVie/Rinvoq': '#ffd100',   
     'AbbVie/Allergan': '#ccbd7cff',
     'AbbVie/Vyalev': '#e2ca5eff',
@@ -42,9 +42,9 @@ export const clientColors = {
     'Bayer/Claritin': '#8192abff', 
     'Beiersdorf/Body': '#92a9cc',   
     'Beiersdorf/Eczema': '#a70531',  
-    'BI/Spevigo': '#403a60',   
+    'LEO/Spevigo': '#403a60',   
     'BMS/Breyansi': '#1d428a', 
-    'Bluebird Bio/Lyfgenia': '#0f44d3dc',
+    'Genetix/Lyfgenia': '#0f44d3dc',
     'Castle': '#0b4d89',  
     'Exelixis/Cabometyx': '#005689',
     'Galderma/Nemluvio': '#475ef2',  
