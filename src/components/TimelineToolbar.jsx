@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Plus, Search, Download, Filter as FilterIcon, Calendar, Table } from 'lucide-react';
+import * as XLSX from 'xlsx';
 import { useTimeline } from './TimelineProvider';
 import { 
     Tooltip,
@@ -25,7 +26,7 @@ export const TimelineToolbar = ({ currentView, onViewChange }) => {
 
     const handleExport = () => {
         const filteredData = applyFilters(data, filters, searchTerm);
-        
+
         const headers = [
             'Market',
             'Client/Brand',
@@ -40,33 +41,28 @@ export const TimelineToolbar = ({ currentView, onViewChange }) => {
             'Missed Deadline'
         ];
 
-        const csvContent = [
-            headers.join(','),
+        const excelData = [
+            headers,
             ...filteredData.map(row => [
                 row.market || '',
                 row.clientSponsor || '',
                 row.project || '',
                 row.dueDate || '',
-                `"${(row.task || '').replace(/"/g, '""')}"`,
+                row.task || '',
                 row.complete ? 'TRUE' : 'FALSE',
                 row.team || '',
                 row.me || '',
                 row.deployment || '',
-                `"${(row.notes || '').replace(/"/g, '""')}"`,
+                row.notes || '',
                 row.missedDeadline ? 'TRUE' : 'FALSE'
-            ].join(','))
-        ].join('\n');
+            ])
+        ];
 
-        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-        const link = document.createElement('a');
-        const url = URL.createObjectURL(blob);
-        
-        link.setAttribute('href', url);
-        link.setAttribute('download', `timelines_export_${new Date().toISOString().split('T')[0]}.csv`);
-        link.style.visibility = 'hidden';
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
+        const worksheet = XLSX.utils.aoa_to_sheet(excelData);
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, 'Timelines');
+
+        XLSX.writeFile(workbook, `timelines_export_${new Date().toISOString().split('T')[0]}.xlsx`);
     };
     
     const handleAddRow = () => {
@@ -184,7 +180,7 @@ export const TimelineToolbar = ({ currentView, onViewChange }) => {
                             </button>
                         </TooltipTrigger>
                         <TooltipContent>
-                            Export to CSV
+                            Export to Excel
                         </TooltipContent>
                     </Tooltip>
                 </TooltipProvider>
