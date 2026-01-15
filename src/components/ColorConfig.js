@@ -126,7 +126,7 @@ export const projectColors = {
     'JCAD Online Leaderboard Ad': '#438496',  
     'Manuscript Supplement': '#4d64a4',      
     'NHR': '#4d64a4',
-    'NPPA/PIA': '#58327f',                   
+    'NPPA': '#58327f',                   
     'Patient Edition': '#AF52DE',   
     'Patient / KOL Series': '#7d419b',     
     'Podcast': '#045f1c',     
