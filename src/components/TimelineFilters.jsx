@@ -12,9 +12,19 @@ const normalizeColumnName = (column) => {
         'Team': 'team',
         'ME': 'me',
         'Deployment': 'deployment',
-        'Notes': 'notes'
+        'Notes': 'notes',
+        'market': 'market',
+        'clientSponsor': 'clientSponsor',
+        'project': 'project',
+        'dueDate': 'dueDate',
+        'task': 'task',
+        'complete': 'complete',
+        'team': 'team',
+        'me': 'me',
+        'deployment': 'deployment',
+        'notes': 'notes'
     };
-    
+
     return columnMapping[column] || column.toLowerCase().replace(/\//g, '');
 };
 
@@ -37,17 +47,21 @@ const getColumnType = (column) => {
 
 function parseAndNormalizeDate(dateValue) {
     if (!dateValue) return null;
-    
+
     if (dateValue instanceof Date) {
       return new Date(dateValue.getFullYear(), dateValue.getMonth(), dateValue.getDate());
     }
-    
+
     try {
       let date;
-      
+
       if (typeof dateValue === 'string' && dateValue.match(/^\d{4}-\d{2}-\d{2}$/)) {
         const [year, month, day] = dateValue.split('-').map(Number);
         date = new Date(year, month - 1, day);
+      }
+      else if (typeof dateValue === 'string' && dateValue.match(/^\d{4}-\d{2}-\d{2}T/)) {
+        const parts = dateValue.split('T')[0].split('-').map(Number);
+        date = new Date(parts[0], parts[1] - 1, parts[2]);
       }
       else if (typeof dateValue === 'string' && dateValue.includes(',')) {
         const parts = dateValue.split(',');
@@ -59,13 +73,19 @@ function parseAndNormalizeDate(dateValue) {
         }
       }
       else {
-        date = new Date(dateValue);
+        const parsed = new Date(dateValue);
+        if (!isNaN(parsed.getTime())) {
+          const parts = parsed.toISOString().split('T')[0].split('-');
+          date = new Date(+parts[0], +parts[1] - 1, +parts[2]);
+        } else {
+          date = parsed;
+        }
       }
-      
+
       if (isNaN(date.getTime())) {
         return null;
       }
-      
+
       return new Date(date.getFullYear(), date.getMonth(), date.getDate());
     } catch (e) {
       console.error("Error parsing date:", e);
@@ -523,6 +543,8 @@ export const applyFilters = (data, filters, searchTerm) => {
                 }
 
                 case 'select':
+                    return value && String(value) === String(filterValue);
+
                 case 'text':
                 default:
                     return value && String(value)
