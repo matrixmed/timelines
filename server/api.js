@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { getDb } = require('./db');
+const { syncLinkedSocialDates, flagLinkedSocialDeleted, flagLinkedSocialStandby } = require('./social-api');
 let io;
 
 const setSocketIO = (socketIO) => {
@@ -68,6 +69,9 @@ router.put('/timelines/:id', async (req, res) => {
     complete, team, me, bd, deployment, notes, missedDeadline
   } = req.body;
   try {
+    const oldResult = await db.query('SELECT * FROM timelines WHERE id = $1', [id]);
+    const oldRow = oldResult.rows.length > 0 ? oldResult.rows[0] : null;
+
     const result = await db.query(`
       UPDATE timelines
       SET market = $1, clientSponsor = $2, project = $3, dueDate = $4,
@@ -84,6 +88,14 @@ router.put('/timelines/:id', async (req, res) => {
     if (io) {
       io.to('timelines').emit('timeline-update', transformedRow);
     }
+
+    if (oldRow && dueDate && String(oldRow.duedate) !== String(dueDate)) {
+      syncLinkedSocialDates(id, dueDate, io);
+    }
+
+    if (oldRow && missedDeadline && !oldRow.misseddeadline) {
+      flagLinkedSocialStandby(id, true, io);
+    }
   } catch (error) {
     console.error('Error updating timeline:', error);
     res.status(500).json({ error: 'Failed to update timeline' });
@@ -94,9 +106,11 @@ router.delete('/timelines/:id', async (req, res) => {
   const db = await getDb();
   const { id } = req.params;
   try {
+    await flagLinkedSocialDeleted(id, io);
+
     await db.query('DELETE FROM timelines WHERE id = $1', [id]);
     res.json({ success: true });
-    
+
     if (io) {
       io.to('timelines').emit('timeline-delete', id);
     }

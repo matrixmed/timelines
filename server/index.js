@@ -3,6 +3,8 @@ const { createServer } = require('http');
 const { Server } = require('socket.io');
 const { initializeDb, importCsv } = require('./db');
 const { router: api, setSocketIO } = require('./api');
+const { router: socialApi, setSocketIO: setSocialSocketIO } = require('./social-api');
+const { initializeSocialDb } = require('./social-db');
 const path = require('path');
 const cors = require('cors');
 const app = express();
@@ -15,11 +17,13 @@ const io = new Server(httpServer, {
   }
 });
 setSocketIO(io);
+setSocialSocketIO(io);
 
 app.use(cors());
 app.use(express.json());
 
 app.use('/api', api);
+app.use('/api', socialApi);
 
 app.use(express.static(path.resolve(__dirname, '../build')));
 
@@ -46,6 +50,15 @@ io.on('connection', (socket) => {
   socket.on('create-timeline', (data) => {
     socket.broadcast.to('timelines').emit('timeline-create', data);
   });
+  socket.on('update-social', (data) => {
+    socket.broadcast.to('timelines').emit('social-update', data);
+  });
+  socket.on('delete-social', (id) => {
+    socket.broadcast.to('timelines').emit('social-delete', id);
+  });
+  socket.on('create-social', (data) => {
+    socket.broadcast.to('timelines').emit('social-create', data);
+  });
   socket.on('disconnect', () => {
     console.log('Client disconnected:', socket.id);
     socket.leave('timelines');
@@ -55,6 +68,7 @@ io.on('connection', (socket) => {
 async function startup() {
   try {
     await initializeDb();
+    await initializeSocialDb();
     const csvPath = path.join(__dirname, './Timelines.csv');
     if (require('fs').existsSync(csvPath)) {
       await importCsv(csvPath);

@@ -14,12 +14,12 @@ import './styles/rowstyles.css';
 const TimelineContent = () => {
     const [view, setView] = useState('table');
     const { openDeleteModal, DeleteModal } = TimelineModals();
-    
+
     const handleDeleteClick = useCallback((row) => {
         console.log("Delete clicked for row:", row.id);
         openDeleteModal(row);
     }, [openDeleteModal]);
-    
+
     return (
         <div className="timelines-container">
             <div className="header-shield"></div>

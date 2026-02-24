@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Plus, Search, Download, Filter as FilterIcon, Calendar, Table } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import { useTimeline } from './TimelineProvider';
-import { 
+import {
     Tooltip,
     TooltipContent,
     TooltipProvider,
@@ -21,7 +21,7 @@ export const TimelineToolbar = ({ currentView, onViewChange }) => {
     } = useTimeline();
 
     const [showFilters, setShowFilters] = useState(false);
-    
+
     const activeFilterCount = Object.keys(filters).length;
 
     const handleExport = () => {
@@ -64,11 +64,11 @@ export const TimelineToolbar = ({ currentView, onViewChange }) => {
 
         XLSX.writeFile(workbook, `timelines_export_${new Date().toISOString().split('T')[0]}.xlsx`);
     };
-    
+
     const handleAddRow = () => {
         addRow();
     };
-    
+
     const handleClearFilters = () => {
         setFilters({});
         setSearchTerm('');
@@ -97,11 +97,11 @@ export const TimelineToolbar = ({ currentView, onViewChange }) => {
                 <TooltipProvider>
                     <Tooltip>
                         <TooltipTrigger asChild>
-                            <button 
+                            <button
                                 className={`toolbar-button ${showFilters ? 'active' : ''}`}
                                 onClick={() => setShowFilters(!showFilters)}
                             >
-                                <FilterIcon size={18} /> 
+                                <FilterIcon size={18} />
                                 Filters
                                 {activeFilterCount > 0 && (
                                     <span className="filter-badge">{activeFilterCount}</span>
@@ -113,11 +113,11 @@ export const TimelineToolbar = ({ currentView, onViewChange }) => {
                         </TooltipContent>
                     </Tooltip>
                 </TooltipProvider>
-                
+
                 <TooltipProvider>
                     <Tooltip>
                         <TooltipTrigger asChild>
-                            <button 
+                            <button
                                 className="toolbar-button"
                                 onClick={toggleView}
                             >
@@ -137,9 +137,9 @@ export const TimelineToolbar = ({ currentView, onViewChange }) => {
                         </TooltipContent>
                     </Tooltip>
                 </TooltipProvider>
-                
+
                 {activeFilterCount > 0 && (
-                    <button 
+                    <button
                         className="toolbar-button clear-filters"
                         onClick={handleClearFilters}
                     >
@@ -159,7 +159,7 @@ export const TimelineToolbar = ({ currentView, onViewChange }) => {
                         className="search-input"
                     />
                     {searchTerm && (
-                        <button 
+                        <button
                             className="search-clear-btn"
                             onClick={() => setSearchTerm('')}
                             title="Clear search"
@@ -172,7 +172,7 @@ export const TimelineToolbar = ({ currentView, onViewChange }) => {
                 <TooltipProvider>
                     <Tooltip>
                         <TooltipTrigger asChild>
-                            <button 
+                            <button
                                 className="toolbar-button"
                                 onClick={handleExport}
                             >
@@ -185,7 +185,7 @@ export const TimelineToolbar = ({ currentView, onViewChange }) => {
                     </Tooltip>
                 </TooltipProvider>
             </div>
-            
+
             {showFilters && (
                 <div className="toolbar-filters">
                     <TimelineFilters />
