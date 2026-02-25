@@ -23,11 +23,9 @@ const AUTO_PREFIX = '\u2022 ';
 
 const buildAutoNote = (message) => `${AUTO_PREFIX}${message}`;
 
-const replaceAutoNotes = (existingNotes, newAutoNote) => {
-  const lines = (existingNotes || '').split('\n');
-  const userLines = lines.filter(l => !l.startsWith(AUTO_PREFIX) && !l.startsWith('[AUTO]'));
-  const userNotes = userLines.join('\n').trim();
-  return userNotes ? `${newAutoNote}\n${userNotes}` : newAutoNote;
+const appendAutoNote = (existingNotes, newAutoNote) => {
+  const existing = (existingNotes || '').trim();
+  return existing ? `${newAutoNote}\n${existing}` : newAutoNote;
 };
 
 const transformSocialColumns = (rows) => {
@@ -44,6 +42,8 @@ const transformSocialColumns = (rows) => {
         transformed['linkedRowDeleted'] = row[key];
       } else if (key === 'linkedtask' || key === 'linkedTask') {
         transformed['linkedTask'] = row[key];
+      } else if (key === 'posttime') {
+        transformed['postTime'] = row[key];
       } else if (key === 'datechanged') {
         transformed['dateChanged'] = row[key];
       } else if (key === 'linkedMissedDeadline' || key === 'linkedmisseddeadline') {
@@ -106,7 +106,7 @@ router.post('/social', async (req, res) => {
   try {
     const db = await getDb();
     const {
-      details, brand, content, platforms, postDate, status,
+      details, brand, content, platforms, postDate, postTime, status,
       owner, notes, linkedTimelineId, linkedDateOffset, linkedRowDeleted
     } = req.body;
 
@@ -115,20 +115,21 @@ router.post('/social', async (req, res) => {
       const info = await getLinkedTimelineInfo(db, linkedTimelineId);
       if (info && info.task) {
         const autoNote = buildAutoNote(`Social post for ${info.task}`);
-        finalNotes = replaceAutoNotes(notes, autoNote);
+        finalNotes = appendAutoNote(notes, autoNote);
       }
     }
 
     const result = await db.query(`
       INSERT INTO social_posts (
-        details, brand, content, platforms, postDate, status,
+        details, brand, content, platforms, postDate, postTime, status,
         owner, notes, linkedTimelineId, linkedDateOffset, linkedRowDeleted, dateChanged
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
       RETURNING *
     `, [
       details, brand, content,
       platforms ? (typeof platforms === 'string' ? platforms : JSON.stringify(platforms)) : '[]',
       postDate || null,
+      postTime || null,
       status || 'In Progress',
       owner, finalNotes,
       linkedTimelineId || null,
@@ -159,7 +160,7 @@ router.put('/social/:id', async (req, res) => {
     const db = await getDb();
     const { id } = req.params;
     const {
-      details, brand, content, platforms, postDate, status,
+      details, brand, content, platforms, postDate, postTime, status,
       owner, notes, linkedTimelineId, linkedDateOffset, linkedRowDeleted, dateChanged
     } = req.body;
 
@@ -173,22 +174,23 @@ router.put('/social/:id', async (req, res) => {
       const info = await getLinkedTimelineInfo(db, nowLinked);
       if (info && info.task) {
         const autoNote = buildAutoNote(`Social post for ${info.task}`);
-        finalNotes = replaceAutoNotes(notes, autoNote);
+        finalNotes = appendAutoNote(notes, autoNote);
       }
     }
 
     const result = await db.query(`
       UPDATE social_posts
       SET details = $1, brand = $2, content = $3, platforms = $4,
-          postDate = $5, status = $6, owner = $7, notes = $8,
-          linkedTimelineId = $9, linkedDateOffset = $10, linkedRowDeleted = $11,
-          dateChanged = $12
-      WHERE id = $13
+          postDate = $5, postTime = $6, status = $7, owner = $8, notes = $9,
+          linkedTimelineId = $10, linkedDateOffset = $11, linkedRowDeleted = $12,
+          dateChanged = $13
+      WHERE id = $14
       RETURNING *
     `, [
       details, brand, content,
       platforms ? (typeof platforms === 'string' ? platforms : JSON.stringify(platforms)) : '[]',
       postDate || null,
+      postTime || null,
       status || 'In Progress',
       owner, finalNotes,
       linkedTimelineId || null,
@@ -271,7 +273,7 @@ async function syncLinkedSocialDates(timelineId, newDueDate, socketIO, oldDueDat
         autoNoteText = `Post date set to ${formatDateReadable(newPostDateStr)}`;
       }
       const autoNote = buildAutoNote(autoNoteText);
-      const newNotes = replaceAutoNotes(row.notes, autoNote);
+      const newNotes = appendAutoNote(row.notes, autoNote);
 
       let newStatus = row.status;
       if (row.status === 'Standby' && isFutureDate) {
@@ -307,7 +309,7 @@ async function flagLinkedSocialDeleted(timelineId, socketIO) {
 
     for (const row of linked.rows) {
       const autoNote = buildAutoNote('Linked editor row was deleted');
-      const newNotes = replaceAutoNotes(row.notes, autoNote);
+      const newNotes = appendAutoNote(row.notes, autoNote);
 
       const updated = await db.query(
         `UPDATE social_posts
@@ -340,7 +342,7 @@ async function flagLinkedSocialStandby(timelineId, missedDeadline, socketIO) {
 
       for (const row of linked.rows) {
         const autoNote = buildAutoNote(`Editor task "${taskName}" missed deadline - post on standby`);
-        const newNotes = replaceAutoNotes(row.notes, autoNote);
+        const newNotes = appendAutoNote(row.notes, autoNote);
 
         const updated = await db.query(
           `UPDATE social_posts SET status = 'Standby', notes = $1, dateChanged = false
@@ -363,7 +365,7 @@ async function flagLinkedSocialStandby(timelineId, missedDeadline, socketIO) {
 
       for (const row of linked.rows) {
         const autoNote = buildAutoNote(`Editor task "${taskName}" deadline recovered - back in progress`);
-        const newNotes = replaceAutoNotes(row.notes, autoNote);
+        const newNotes = appendAutoNote(row.notes, autoNote);
 
         const updated = await db.query(
           `UPDATE social_posts SET status = 'In Progress', notes = $1

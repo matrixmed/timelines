@@ -2,14 +2,15 @@
   width: 100%;
 }
 
-.social-table th:nth-child(1) { width: 260px; }
-.social-table th:nth-child(2) { width: 100px; }
-.social-table th:nth-child(3) { width: 90px; }
-.social-table th:nth-child(4) { width: 120px; }
-.social-table th:nth-child(5) { width: 170px; }
-.social-table th:nth-child(6) { width: 90px; }
-.social-table th:nth-child(7) { width: 160px; }
-.social-table th:nth-child(8) { width: 60px; }
+.social-table th:nth-child(1) { width: 250px; }  /* Details */
+.social-table th:nth-child(2) { width: 90px; }   /* Content */
+.social-table th:nth-child(3) { width: 80px; }   /* Brand */
+.social-table th:nth-child(4) { width: 120px; }  /* Platform */
+.social-table th:nth-child(5) { width: 160px; }  /* Post Date */
+.social-table th:nth-child(6) { width: 60px; }   /* Time */
+.social-table th:nth-child(7) { width: 80px; }   /* Status */
+.social-table th:nth-child(8) { width: 140px; }  /* Updates */
+.social-table th:nth-child(9) { width: 60px; }   /* Actions */
 
 .social-table .cell-content-details {
   white-space: pre-wrap;
@@ -430,4 +431,67 @@
 .post-date-missed {
   color: #dc2626 !important;
   font-weight: 600;
+}
+
+.updates-cell-wrapper {
+  position: relative;
+}
+
+.updates-cell-wrapper .cell-content.cell-content-multiline {
+  max-height: none;
+  overflow: visible;
+  display: block;
+  -webkit-line-clamp: unset;
+  -webkit-box-orient: unset;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.updates-history-icon {
+  cursor: pointer;
+  color: #9ca3af;
+  margin-left: 4px;
+  display: inline-block;
+  vertical-align: middle;
+}
+
+.updates-history-icon:hover {
+  color: #6b7280;
+}
+
+.updates-history-popover {
+  display: none;
+  position: absolute;
+  bottom: 100%;
+  left: 0;
+  z-index: 100;
+  width: 320px;
+  max-height: 250px;
+  overflow-y: auto;
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  padding: 12px;
+  font-size: 12px;
+}
+
+.updates-history-icon:hover + .updates-history-popover,
+.updates-history-popover:hover {
+  display: block;
+}
+
+.updates-history-entry {
+  padding: 4px 0;
+  border-bottom: 1px solid var(--border-light);
+  color: #6b7280;
+  font-style: italic;
+}
+
+.updates-history-entry:last-child {
+  border-bottom: none;
+}
+
+.time-group {
+  max-width: 120px;
 }

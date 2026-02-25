@@ -157,6 +157,7 @@ export const SocialProvider = ({ children }) => {
       content: '',
       platforms: '[]',
       postDate: '',
+      postTime: '',
       status: 'In Progress',
       owner: '',
       notes: '',
@@ -247,10 +248,8 @@ export const SocialProvider = ({ children }) => {
         } catch { return dateStr; }
       };
       const autoNote = `\u2022 Moved to ${formatDateForNote(value)}`;
-      const lines = (currentRow.notes || '').split('\n');
-      const userLines = lines.filter(l => !l.startsWith('\u2022 ') && !l.startsWith('[AUTO]'));
-      const userNotes = userLines.join('\n').trim();
-      updates.notes = userNotes ? `${autoNote}\n${userNotes}` : autoNote;
+      const existing = (currentRow.notes || '').trim();
+      updates.notes = existing ? `${autoNote}\n${existing}` : autoNote;
       updates.dateChanged = false;
     }
 

@@ -8,13 +8,16 @@ const normalizeColumnName = (column) => {
     'Content': 'content',
     'Platform': 'platforms',
     'Post Date': 'postDate',
+    'Time': 'postTime',
     'Status': 'status',
+    'Updates': 'notes',
     'Notes': 'notes',
     'details': 'details',
     'brand': 'brand',
     'content': 'content',
     'platforms': 'platforms',
     'postDate': 'postDate',
+    'postTime': 'postTime',
     'status': 'status',
     'notes': 'notes'
   };
@@ -32,6 +35,8 @@ const getColumnType = (column) => {
       return 'select';
     case 'platforms':
       return 'multiselect';
+    case 'postTime':
+      return 'text';
     default:
       return 'text';
   }
@@ -301,7 +306,7 @@ export const SocialFilters = () => {
   }, [filters, data, setFilters]);
 
   const attachFilterButtons = useCallback(() => {
-    const columns = ['Details', 'Content', 'Brand', 'Platform', 'Post Date', 'Status', 'Notes'];
+    const columns = ['Details', 'Content', 'Brand', 'Platform', 'Post Date', 'Time', 'Status', 'Updates'];
 
     columns.forEach(column => {
       const filterSlot = document.querySelector(`.header-filter-icon[data-column="${column}"][data-table="social"]`);

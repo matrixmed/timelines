@@ -14,8 +14,8 @@ const NewSocialRow = ({ onClose, row }) => {
     content: row.content || '',
     platforms: row.platforms || '[]',
     postDate: row.postDate || '',
+    postTime: row.postTime || '',
     status: row.status || 'In Progress',
-    notes: row.notes || '',
   });
   const [linkedTimelineId, setLinkedTimelineId] = useState(row.linkedTimelineId || null);
   const [linkedDateOffset, setLinkedDateOffset] = useState(row.linkedDateOffset || 0);
@@ -167,15 +167,13 @@ const NewSocialRow = ({ onClose, row }) => {
                 className="form-input date-input"
               />
             </div>
-          </div>
-          <div className="form-row">
-            <div className="form-group full-width">
-              <label className="form-label">Notes</label>
-              <textarea
-                value={formState.notes}
-                onChange={(e) => handleChange('notes', e.target.value)}
-                className="form-textarea"
-                rows={2}
+            <div className="form-group time-group">
+              <label className="form-label">Time</label>
+              <input
+                type="text"
+                value={formState.postTime}
+                onChange={(e) => handleChange('postTime', e.target.value)}
+                className="form-input"
               />
             </div>
           </div>

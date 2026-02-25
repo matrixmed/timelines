@@ -1,7 +1,7 @@
 import React, { useRef, useEffect, useCallback, memo, useState } from 'react';
 import { useSocial } from './SocialProvider';
 import NewSocialRow from './NewSocialRow';
-import { Check, X, Trash2, Link2 } from 'lucide-react';
+import { Check, X, Trash2, Link2, History } from 'lucide-react';
 import { platforms, socialStatuses, socialBrands, contentTypes, brandMarketMap } from './SocialFields';
 import { socialColorConfig } from './SocialColorConfig';
 import { applySocialFilters } from './SocialFilters';
@@ -195,7 +195,7 @@ const SocialCell = memo(({
       );
     }
 
-    if (field === 'details' || field === 'notes') {
+    if (field === 'details') {
       return (
         <textarea
           value={localValue || ''}
@@ -293,22 +293,33 @@ const SocialCell = memo(({
     );
   }
 
-  if (field === 'notes' && value) {
-    const lines = value.split('\n');
-    const isAutoLine = (l) => l.startsWith('\u2022 ') || l.startsWith('[AUTO]');
+  if (field === 'notes') {
+    if (!value) {
+      return <div className="cell-content cell-content-multiline">{''}</div>;
+    }
+    const lines = value.split('\n').filter(l => l.trim());
+    const firstLine = lines[0] || '';
     return (
-      <div className="cell-content cell-content-multiline" onClick={() => !isPending && onCellClick()}>
-        {lines.map((line, i) => (
-          <span key={i} className={isAutoLine(line) ? 'auto-note-line' : ''}>
-            {line}{i < lines.length - 1 ? '\n' : ''}
-          </span>
-        ))}
+      <div className="updates-cell-wrapper">
+        <div className="cell-content cell-content-multiline">
+          <span className="auto-note-line">{firstLine}</span>
+          {lines.length > 1 && (
+            <>
+              <History size={13} className="updates-history-icon" />
+              <div className="updates-history-popover">
+                {lines.map((line, i) => (
+                  <div key={i} className="updates-history-entry">{line}</div>
+                ))}
+              </div>
+            </>
+          )}
+        </div>
       </div>
     );
   }
 
   return (
-    <div className={`cell-content ${field === 'notes' ? 'cell-content-multiline' : ''}`}
+    <div className="cell-content"
       onClick={() => !isPending && onCellClick()}>
       {value || ''}
     </div>
@@ -329,7 +340,7 @@ const SocialTableRow = memo(({
   return (
     <tr className={`${editedRows[row.id] ? 'row-edited' : ''} ${isStandby ? 'social-row-standby' : ''} ${isLinkedDeleted ? 'social-row-linked-deleted' : ''} ${isCurrentWeek ? 'social-row-current-week' : ''}`}
       data-current-week={isCurrentWeek || undefined}>
-      {['details', 'content', 'brand', 'platforms', 'postDate',
+      {['details', 'content', 'brand', 'platforms', 'postDate', 'postTime',
         'status', 'notes'].map(field => (
         <td key={field} className="cell">
           <SocialCell
@@ -337,9 +348,11 @@ const SocialTableRow = memo(({
             value={row[field]}
             row={row}
             isPending={isPending}
-            isEditing={(isPending && row.id.toString().startsWith('pending-')) ||
-              (!isPending && editingCell?.rowId === row.id && editingCell?.field === field)}
-            onCellClick={() => setEditingCell({ rowId: row.id, field })}
+            isEditing={field !== 'notes' && (
+              (isPending && row.id.toString().startsWith('pending-')) ||
+              (!isPending && editingCell?.rowId === row.id && editingCell?.field === field)
+            )}
+            onCellClick={() => field !== 'notes' && setEditingCell({ rowId: row.id, field })}
             onValueChange={(value) => isPending ?
               updatePendingCell(row.id, field, value) :
               updateCell(row.id, field, value)}
@@ -386,8 +399,8 @@ export const SocialTable = ({ onDeleteClick }) => {
   }, [filteredData, hasScrolled]);
 
   const columnOrder = [
-    'details', 'content', 'brand', 'platforms', 'postDate',
-    'status', 'notes'
+    'details', 'content', 'brand', 'platforms', 'postDate', 'postTime',
+    'status'
   ];
 
   const handleKeyDown = useCallback((e) => {
@@ -525,8 +538,8 @@ export const SocialTable = ({ onDeleteClick }) => {
       <table className="timelines-table social-table">
         <thead className="sticky-header">
           <tr>
-            {['Details', 'Content', 'Brand', 'Platform', 'Post Date',
-              'Status', 'Notes', 'Actions'].map(header => (
+            {['Details', 'Content', 'Brand', 'Platform', 'Post Date', 'Time',
+              'Status', 'Updates', 'Actions'].map(header => (
               <th key={header}>
                 <div className="header-content">
                   <span className="header-text">{header}</span>
@@ -544,7 +557,7 @@ export const SocialTable = ({ onDeleteClick }) => {
             <React.Fragment key={row.id}>
               {row.linkedRowDeleted && (
                 <tr className="linked-row-warning-row">
-                  <td colSpan="8">
+                  <td colSpan="9">
                     <div className="linked-row-warning">
                       Linked editor row was deleted.
                       <button onClick={() => dismissLinkedRowWarning(row.id)}>Dismiss</button>

@@ -36,6 +36,18 @@ async function initializeSocialDb() {
       END $$;
     `);
 
+    await db.query(`
+      DO $$
+      BEGIN
+        IF NOT EXISTS (
+          SELECT 1 FROM information_schema.columns
+          WHERE table_name = 'social_posts' AND column_name = 'posttime'
+        ) THEN
+          ALTER TABLE social_posts ADD COLUMN postTime TEXT;
+        END IF;
+      END $$;
+    `);
+
     const triggerExists = await db.query(`
       SELECT EXISTS (
         SELECT 1 FROM pg_trigger WHERE tgname = 'update_social_timestamp'
