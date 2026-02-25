@@ -1,7 +1,7 @@
 import React, { useRef, useEffect, useCallback, memo, useState } from 'react';
 import { useSocial } from './SocialProvider';
 import NewSocialRow from './NewSocialRow';
-import { Check, X, Trash2, Link2, History } from 'lucide-react';
+import { Check, X, Trash2, Link2, History, StickyNote } from 'lucide-react';
 import { platforms, socialStatuses, socialBrands, contentTypes, brandMarketMap } from './SocialFields';
 import { socialColorConfig } from './SocialColorConfig';
 import { applySocialFilters } from './SocialFilters';
@@ -73,6 +73,7 @@ const SocialCell = memo(({
 }) => {
   const [localValue, setLocalValue] = useState(value);
   const inputRef = useRef(null);
+  const popoverRef = useRef(null);
 
   useEffect(() => { setLocalValue(value); }, [value]);
   useEffect(() => {
@@ -299,19 +300,42 @@ const SocialCell = memo(({
     }
     const lines = value.split('\n').filter(l => l.trim());
     const firstLine = lines[0] || '';
+    const handleTriggerEnter = (e) => {
+      const popover = popoverRef.current;
+      if (!popover) return;
+      const rect = e.currentTarget.getBoundingClientRect();
+      popover.style.display = 'block';
+      let top = rect.top - popover.offsetHeight - 8;
+      let left = rect.left;
+      if (top < 8) top = rect.bottom + 8;
+      if (left + popover.offsetWidth > window.innerWidth - 16) {
+        left = window.innerWidth - popover.offsetWidth - 16;
+      }
+      popover.style.top = `${top}px`;
+      popover.style.left = `${left}px`;
+    };
+    const handleTriggerLeave = () => {
+      const popover = popoverRef.current;
+      if (popover) popover.style.display = 'none';
+    };
     return (
       <div className="updates-cell-wrapper">
         <div className="cell-content cell-content-multiline">
           <span className="auto-note-line">{firstLine}</span>
           {lines.length > 1 && (
-            <>
+            <span
+              className="updates-history-trigger"
+              onMouseEnter={handleTriggerEnter}
+              onMouseLeave={handleTriggerLeave}
+            >
               <History size={13} className="updates-history-icon" />
-              <div className="updates-history-popover">
+              <div className="updates-history-popover" ref={popoverRef}>
+                <div className="updates-history-title">Update History ({lines.length})</div>
                 {lines.map((line, i) => (
                   <div key={i} className="updates-history-entry">{line}</div>
                 ))}
               </div>
-            </>
+            </span>
           )}
         </div>
       </div>
@@ -325,6 +349,101 @@ const SocialCell = memo(({
     </div>
   );
 });
+
+const UserNotesPopover = ({ row, onSave }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [noteText, setNoteText] = useState(row.userNotes || '');
+  const popoverRef = useRef(null);
+  const triggerRef = useRef(null);
+  const hasNotes = !!(row.userNotes && row.userNotes.trim());
+
+  useEffect(() => { setNoteText(row.userNotes || ''); }, [row.userNotes]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleClickOutside = (e) => {
+      if (popoverRef.current && !popoverRef.current.contains(e.target) &&
+          triggerRef.current && !triggerRef.current.contains(e.target)) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [isOpen]);
+
+  const handleSave = () => {
+    onSave(row.id, noteText);
+    setIsOpen(false);
+  };
+
+  const positionPopover = () => {
+    if (!triggerRef.current || !popoverRef.current) return;
+    const rect = triggerRef.current.getBoundingClientRect();
+    const popover = popoverRef.current;
+    let top = rect.bottom + 6;
+    let left = rect.left - 260;
+    if (left < 16) left = 16;
+    if (top + popover.offsetHeight > window.innerHeight - 16) {
+      top = rect.top - popover.offsetHeight - 6;
+    }
+    popover.style.top = `${top}px`;
+    popover.style.left = `${left}px`;
+  };
+
+  useEffect(() => {
+    if (isOpen) setTimeout(positionPopover, 0);
+  }, [isOpen]);
+
+  const handleHover = (e) => {
+    if (isOpen || !hasNotes) return;
+    const tooltip = e.currentTarget.querySelector('.user-notes-hover-tip');
+    if (tooltip) {
+      const rect = e.currentTarget.getBoundingClientRect();
+      tooltip.style.top = `${rect.bottom + 6}px`;
+      tooltip.style.left = `${rect.left - 180}px`;
+      tooltip.style.display = 'block';
+    }
+  };
+  const handleHoverLeave = (e) => {
+    const tooltip = e.currentTarget.querySelector('.user-notes-hover-tip');
+    if (tooltip) tooltip.style.display = 'none';
+  };
+
+  return (
+    <div className="user-notes-wrapper" onMouseEnter={handleHover} onMouseLeave={handleHoverLeave}>
+      <button
+        ref={triggerRef}
+        className={`action-button user-notes-btn ${hasNotes ? 'has-notes' : ''}`}
+        onClick={() => setIsOpen(!isOpen)}
+        title={hasNotes ? 'View/edit notes' : 'Add notes'}
+      >
+        <StickyNote size={16} />
+      </button>
+      {hasNotes && !isOpen && (
+        <div className="user-notes-hover-tip">
+          {row.userNotes}
+        </div>
+      )}
+      {isOpen && (
+        <div className="user-notes-popover" ref={popoverRef}>
+          <div className="user-notes-popover-title">Notes</div>
+          <textarea
+            className="user-notes-textarea"
+            value={noteText}
+            onChange={(e) => setNoteText(e.target.value)}
+            placeholder="Add notes..."
+            rows={4}
+            autoFocus
+          />
+          <div className="user-notes-popover-actions">
+            <button className="user-notes-save-btn" onClick={handleSave}>Save</button>
+            <button className="user-notes-cancel-btn" onClick={() => { setNoteText(row.userNotes || ''); setIsOpen(false); }}>Cancel</button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
 
 const SocialTableRow = memo(({
   row, isPending, editingCell, editedRows,
@@ -455,6 +574,24 @@ export const SocialTable = ({ onDeleteClick }) => {
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, [handleKeyDown]);
 
+  const saveUserNotes = useCallback(async (rowId, noteText) => {
+    const currentRow = data.find(r => r.id === rowId);
+    if (!currentRow) return;
+    const updatedRow = { ...currentRow, userNotes: noteText };
+    try {
+      const response = await fetch(`${config.apiUrl}/api/social/${rowId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updatedRow)
+      });
+      if (response.ok) {
+        socket?.emit('update-social', updatedRow);
+      }
+    } catch (err) {
+      console.error('Error saving user notes:', err);
+    }
+  }, [data, socket]);
+
   const handleLinkRow = useCallback((rowId) => {
     setLinkingRowId(linkingRowId === rowId ? null : rowId);
   }, [linkingRowId]);
@@ -502,6 +639,7 @@ export const SocialTable = ({ onDeleteClick }) => {
 
     return (
       <div className="action-buttons">
+        <UserNotesPopover row={row} onSave={saveUserNotes} />
         <button
           className={`action-button link-toggle ${row.linkedTimelineId ? 'active' : ''}`}
           onClick={() => handleLinkRow(row.id)}
@@ -518,7 +656,7 @@ export const SocialTable = ({ onDeleteClick }) => {
         </button>
       </div>
     );
-  }, [commitPendingRow, removePendingRow, onDeleteClick, handleLinkRow, linkingRowId, handleLinkSelect, dismissLinkedRowWarning]);
+  }, [commitPendingRow, removePendingRow, onDeleteClick, handleLinkRow, saveUserNotes, linkingRowId, handleLinkSelect, dismissLinkedRowWarning]);
 
   const linkingRow = linkingRowId ? data.find(r => r.id === linkingRowId) : null;
 

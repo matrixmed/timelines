@@ -44,6 +44,8 @@ const transformSocialColumns = (rows) => {
         transformed['linkedTask'] = row[key];
       } else if (key === 'posttime') {
         transformed['postTime'] = row[key];
+      } else if (key === 'usernotes') {
+        transformed['userNotes'] = row[key];
       } else if (key === 'datechanged') {
         transformed['dateChanged'] = row[key];
       } else if (key === 'linkedMissedDeadline' || key === 'linkedmisseddeadline') {
@@ -107,7 +109,7 @@ router.post('/social', async (req, res) => {
     const db = await getDb();
     const {
       details, brand, content, platforms, postDate, postTime, status,
-      owner, notes, linkedTimelineId, linkedDateOffset, linkedRowDeleted
+      owner, notes, userNotes, linkedTimelineId, linkedDateOffset, linkedRowDeleted
     } = req.body;
 
     let finalNotes = notes;
@@ -122,8 +124,8 @@ router.post('/social', async (req, res) => {
     const result = await db.query(`
       INSERT INTO social_posts (
         details, brand, content, platforms, postDate, postTime, status,
-        owner, notes, linkedTimelineId, linkedDateOffset, linkedRowDeleted, dateChanged
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+        owner, notes, userNotes, linkedTimelineId, linkedDateOffset, linkedRowDeleted, dateChanged
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
       RETURNING *
     `, [
       details, brand, content,
@@ -132,6 +134,7 @@ router.post('/social', async (req, res) => {
       postTime || null,
       status || 'In Progress',
       owner, finalNotes,
+      userNotes || null,
       linkedTimelineId || null,
       linkedDateOffset || 0,
       linkedRowDeleted || false,
@@ -161,7 +164,7 @@ router.put('/social/:id', async (req, res) => {
     const { id } = req.params;
     const {
       details, brand, content, platforms, postDate, postTime, status,
-      owner, notes, linkedTimelineId, linkedDateOffset, linkedRowDeleted, dateChanged
+      owner, notes, userNotes, linkedTimelineId, linkedDateOffset, linkedRowDeleted, dateChanged
     } = req.body;
 
     const oldResult = await db.query('SELECT * FROM social_posts WHERE id = $1', [id]);
@@ -182,9 +185,9 @@ router.put('/social/:id', async (req, res) => {
       UPDATE social_posts
       SET details = $1, brand = $2, content = $3, platforms = $4,
           postDate = $5, postTime = $6, status = $7, owner = $8, notes = $9,
-          linkedTimelineId = $10, linkedDateOffset = $11, linkedRowDeleted = $12,
-          dateChanged = $13
-      WHERE id = $14
+          userNotes = $10, linkedTimelineId = $11, linkedDateOffset = $12,
+          linkedRowDeleted = $13, dateChanged = $14
+      WHERE id = $15
       RETURNING *
     `, [
       details, brand, content,
@@ -193,6 +196,7 @@ router.put('/social/:id', async (req, res) => {
       postTime || null,
       status || 'In Progress',
       owner, finalNotes,
+      userNotes !== undefined ? userNotes : (oldRow ? oldRow.usernotes : null),
       linkedTimelineId || null,
       linkedDateOffset || 0,
       linkedRowDeleted || false,

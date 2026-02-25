@@ -161,6 +161,7 @@ export const SocialProvider = ({ children }) => {
       status: 'In Progress',
       owner: '',
       notes: '',
+      userNotes: '',
       linkedTimelineId: null,
       linkedDateOffset: 0,
       linkedRowDeleted: false

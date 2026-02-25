@@ -48,6 +48,18 @@ async function initializeSocialDb() {
       END $$;
     `);
 
+    await db.query(`
+      DO $$
+      BEGIN
+        IF NOT EXISTS (
+          SELECT 1 FROM information_schema.columns
+          WHERE table_name = 'social_posts' AND column_name = 'usernotes'
+        ) THEN
+          ALTER TABLE social_posts ADD COLUMN userNotes TEXT;
+        END IF;
+      END $$;
+    `);
+
     const triggerExists = await db.query(`
       SELECT EXISTS (
         SELECT 1 FROM pg_trigger WHERE tgname = 'update_social_timestamp'
@@ -61,6 +73,22 @@ async function initializeSocialDb() {
         FOR EACH ROW
         EXECUTE FUNCTION update_modified_column();
       `);
+    }
+
+    // One-time migration: move user-written lines from notes into userNotes
+    const rows = await db.query(
+      `SELECT id, notes FROM social_posts WHERE notes IS NOT NULL AND notes != '' AND userNotes IS NULL`
+    );
+    for (const row of rows.rows) {
+      const lines = row.notes.split('\n');
+      const autoLines = lines.filter(l => l.startsWith('\u2022 ') || l.startsWith('[AUTO]'));
+      const userLines = lines.filter(l => l.trim() && !l.startsWith('\u2022 ') && !l.startsWith('[AUTO]'));
+      if (userLines.length > 0) {
+        await db.query(
+          `UPDATE social_posts SET userNotes = $1, notes = $2 WHERE id = $3`,
+          [userLines.join('\n'), autoLines.join('\n'), row.id]
+        );
+      }
     }
 
     console.log('Social database initialized successfully');
