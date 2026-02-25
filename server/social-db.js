@@ -18,9 +18,22 @@ async function initializeSocialDb() {
         linkedTimelineId INTEGER REFERENCES timelines(id) ON DELETE SET NULL,
         linkedDateOffset INTEGER DEFAULT 0,
         linkedRowDeleted BOOLEAN DEFAULT FALSE,
+        dateChanged BOOLEAN DEFAULT FALSE,
         createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
+    `);
+
+    await db.query(`
+      DO $$
+      BEGIN
+        IF NOT EXISTS (
+          SELECT 1 FROM information_schema.columns
+          WHERE table_name = 'social_posts' AND column_name = 'datechanged'
+        ) THEN
+          ALTER TABLE social_posts ADD COLUMN dateChanged BOOLEAN DEFAULT FALSE;
+        END IF;
+      END $$;
     `);
 
     const triggerExists = await db.query(`

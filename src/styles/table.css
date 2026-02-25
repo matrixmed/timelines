@@ -301,56 +301,55 @@
   -webkit-box-orient: vertical;
 }
 
-/* Column Widths - more Excel-like proportions */
 .timelines-table th:nth-child(1),
 .timelines-table td:nth-child(1) {
   width: 100px;
-} /* Market */
+}
 
 .timelines-table th:nth-child(2),
 .timelines-table td:nth-child(2) {
   width: 120px;
-} /* Client/Sponsor */
+} 
 
 .timelines-table th:nth-child(3),
 .timelines-table td:nth-child(3) {
   width: 140px;
-} /* Project */
+} 
 
 .timelines-table th:nth-child(4),
 .timelines-table td:nth-child(4) {
   width: 180px;
-} /* Due Date */
+}
 
 .timelines-table th:nth-child(5),
 .timelines-table td:nth-child(5) {
   width: 220px;
-} /* Task */
+} 
 
 .timelines-table th:nth-child(6),
 .timelines-table td:nth-child(6) {
   width: 87px;
-} /* Complete */
+}
 
 .timelines-table th:nth-child(7),
 .timelines-table td:nth-child(7) {
   width: 70px;
-} /* Team */
+}
 
 .timelines-table th:nth-child(8),
 .timelines-table td:nth-child(8) {
   width: 70px;
-} /* ME */
+}
 
 .timelines-table th:nth-child(9),
 .timelines-table td:nth-child(9) {
   width: 70px;
-} /* BD */
+} 
 
 .timelines-table th:nth-child(10),
 .timelines-table td:nth-child(10) {
   width: 100px;
-} /* Deployment */
+}
 
 .timelines-table th:nth-child(11),
 .timelines-table td:nth-child(11) {
@@ -358,18 +357,17 @@
   font-size: 12px;
   padding: 5px;
   max-height: auto;
-} /* Notes */
+}
 
 .timelines-table th:nth-child(12),
 .timelines-table td:nth-child(12) {
   width: 60px;
-} /* Actions */
+}
 
 .center {
   text-align: center;
 }
 
-/* Current Week Highlighting */
 tr.current-week {
   background-color: var(--current-week);
 }
@@ -378,7 +376,6 @@ tr.current-week:hover {
   background-color: #e6f4ff;
 }
 
-/* Empty State */
 .empty-state {
   padding: 40px;
   text-align: center;
@@ -391,7 +388,6 @@ tr.current-week:hover {
   color: var(--border);
 }
 
-/* Scrollbar styling for better Excel-like feel */
 .table-container::-webkit-scrollbar {
   width: 8px;
   height: 8px;

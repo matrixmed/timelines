@@ -9,7 +9,6 @@ const normalizeColumnName = (column) => {
     'Platform': 'platforms',
     'Post Date': 'postDate',
     'Status': 'status',
-    'Owner': 'owner',
     'Notes': 'notes',
     'details': 'details',
     'brand': 'brand',
@@ -17,7 +16,6 @@ const normalizeColumnName = (column) => {
     'platforms': 'platforms',
     'postDate': 'postDate',
     'status': 'status',
-    'owner': 'owner',
     'notes': 'notes'
   };
   return columnMapping[column] || column.toLowerCase();
@@ -30,6 +28,7 @@ const getColumnType = (column) => {
       return 'date';
     case 'brand':
     case 'status':
+    case 'content':
       return 'select';
     case 'platforms':
       return 'multiselect';
@@ -302,7 +301,7 @@ export const SocialFilters = () => {
   }, [filters, data, setFilters]);
 
   const attachFilterButtons = useCallback(() => {
-    const columns = ['Details', 'Brand', 'Content', 'Platform', 'Post Date', 'Status', 'Owner', 'Notes'];
+    const columns = ['Details', 'Content', 'Brand', 'Platform', 'Post Date', 'Status', 'Notes'];
 
     columns.forEach(column => {
       const filterSlot = document.querySelector(`.header-filter-icon[data-column="${column}"][data-table="social"]`);

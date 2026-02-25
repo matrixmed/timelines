@@ -96,10 +96,6 @@ export const SocialCalendarPopover = ({ date, events, position, onClose, onDelet
                       <span className="calendar-popover-label">Brand:</span>
                       <span>{event.brand || '-'}</span>
                     </div>
-                    <div className="calendar-popover-event-row">
-                      <span className="calendar-popover-label">Owner:</span>
-                      <span>{event.owner || '-'}</span>
-                    </div>
                     {eventPlatforms.length > 0 && (
                       <div className="calendar-popover-event-row">
                         <span className="calendar-popover-label">Platforms:</span>

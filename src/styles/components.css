@@ -1,4 +1,3 @@
-/* Buttons */
 .toolbar-button {
   display: inline-flex;
   align-items: center;
@@ -28,7 +27,6 @@
   color: var(--primary);
 }
 
-/* Action Buttons */
 .action-buttons {
   display: flex;
   gap: 4px;
@@ -92,7 +90,6 @@
   opacity: 1;
 }
 
-/* Spreadsheet-style Inputs */
 .cell-input,
 .cell-select,
 .cell-textarea,
@@ -115,7 +112,6 @@
   box-shadow: 0 0 0 2px var(--primary-light);
 }
 
-/* Creatable Select Styles */
 .creatable-select-container {
   position: relative;
   width: 100%;
@@ -168,7 +164,6 @@
   font-style: italic;
 }
 
-/* Style for pending row select */
 .pending-row .creatable-select-input {
   padding: 10px 12px;
   border: 1px solid #d0dcf5;
@@ -179,7 +174,6 @@
   background-color: white;
 }
 
-/* Special styling for pending rows */
 .pending-row .cell-input,
 .pending-row .cell-select,
 .pending-row .cell-textarea,
@@ -224,7 +218,6 @@
   border-color: var(--primary);
 }
 
-/* Filter Controls */
 .filters-container {
   display: flex;
   flex-wrap: wrap;
@@ -254,7 +247,6 @@
   background: var(--primary-light);
 }
 
-/* Date Picker */
 .date-picker-container {
   width: 100%;
   position: relative;
@@ -270,13 +262,11 @@
   opacity: 1;
 }
 
-/* Editor Wrapper */
 .editor-wrapper {
   width: 100%;
   height: 100%;
 }
 
-/* Excel-like Conditional Formatting */
 td.high-priority {
   background-color: #FFEBEE;
 }
@@ -293,7 +283,6 @@ tr.completed-row td.cell-content {
   text-decoration: line-through;
 }
 
-/* Custom Checkbox For More Spreadsheet-Like Style */
 .cell-checkbox-wrapper {
   display: flex;
   align-items: center;
@@ -364,7 +353,6 @@ tr.completed-row td.cell-content {
   border: 1px solid rgba(37, 99, 235, 0.2);
 }
 
-/* Direct targeting of inputs */
 .pending-row input[type="text"],
 .pending-row select,
 .pending-row textarea,
@@ -378,24 +366,20 @@ tr.completed-row td.cell-content {
   background-color: white !important;
 }
 
-/* Target select dropdowns specifically */
 .pending-row select {
   padding-right: 30px !important;
   text-indent: 5px !important;
 }
 
-/* Target textareas specifically */
 .pending-row textarea {
   min-height: 38px !important;
   resize: vertical !important;
 }
 
-/* Target date inputs specifically */
 .pending-row input[type="date"] {
   text-indent: 5px !important;
 }
 
-/* Target checkboxes specifically */
 .pending-row input[type="checkbox"] {
   width: 18px !important;
   height: 18px !important;

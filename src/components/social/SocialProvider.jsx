@@ -199,7 +199,7 @@ export const SocialProvider = ({ children }) => {
       if (!response.ok) throw new Error('Failed to create social post');
 
       const result = await response.json();
-      const newRow = { ...pendingRow, id: result.id };
+      const newRow = { ...result };
       originalRowData.current[result.id] = { ...newRow };
       socket?.emit('create-social', newRow);
 
@@ -234,17 +234,37 @@ export const SocialProvider = ({ children }) => {
     const currentRow = data.find(row => row.id === rowId);
     if (!currentRow) return;
 
+    const updates = { [field]: value };
+
+    if (field === 'postDate' && value && value !== currentRow.postDate) {
+      const formatDateForNote = (dateStr) => {
+        try {
+          const [y, m, d] = dateStr.split('-').map(Number);
+          const date = new Date(y, m - 1, d);
+          return date.toLocaleDateString('en-US', {
+            weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+          });
+        } catch { return dateStr; }
+      };
+      const autoNote = `[AUTO] Moved to ${formatDateForNote(value)}`;
+      const lines = (currentRow.notes || '').split('\n');
+      const userLines = lines.filter(l => !l.startsWith('[AUTO]'));
+      const userNotes = userLines.join('\n').trim();
+      updates.notes = userNotes ? `${autoNote}\n${userNotes}` : autoNote;
+      updates.dateChanged = false;
+    }
+
     setEditedRows(prev => ({
       ...prev,
       [rowId]: {
         ...(prev[rowId] || {}),
-        [field]: value
+        ...updates
       }
     }));
 
     setData(prevData =>
       prevData.map(row => row.id === rowId ?
-        { ...row, [field]: value } :
+        { ...row, ...updates } :
         row
       )
     );

@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { useSocial } from './SocialProvider';
-import { platforms, socialStatuses } from './SocialFields';
+import { platforms, socialStatuses, socialBrands, contentTypes, brandMarketMap } from './SocialFields';
 import { socialColorConfig } from './SocialColorConfig';
 import { PlatformBadge } from './PlatformBadge';
-import { Check, X } from 'lucide-react';
+import { LinkedRowSelector } from './LinkedRowSelector';
+import { Check, X, Link2 } from 'lucide-react';
 
 const NewSocialRow = ({ onClose, row }) => {
   const { updatePendingCell, commitPendingRow, removePendingRow } = useSocial();
@@ -14,9 +15,11 @@ const NewSocialRow = ({ onClose, row }) => {
     platforms: row.platforms || '[]',
     postDate: row.postDate || '',
     status: row.status || 'In Progress',
-    owner: row.owner || '',
     notes: row.notes || '',
   });
+  const [linkedTimelineId, setLinkedTimelineId] = useState(row.linkedTimelineId || null);
+  const [linkedDateOffset, setLinkedDateOffset] = useState(row.linkedDateOffset || 0);
+  const [linkedTask, setLinkedTask] = useState('');
 
   const handleChange = (field, value) => {
     setFormState(prev => ({ ...prev, [field]: value }));
@@ -63,6 +66,16 @@ const NewSocialRow = ({ onClose, row }) => {
     }
   };
 
+  const handleLinkSelect = (timelineId, offset, task) => {
+    setLinkedTimelineId(timelineId);
+    setLinkedDateOffset(offset);
+    setLinkedTask(task || '');
+    updatePendingCell(row.id, 'linkedTimelineId', timelineId);
+    updatePendingCell(row.id, 'linkedDateOffset', offset);
+  };
+
+  const filterMarket = formState.brand ? brandMarketMap[formState.brand] : null;
+
   return (
     <div className="new-timeline-row new-social-row">
       <div className="new-timeline-row-header">
@@ -81,40 +94,14 @@ const NewSocialRow = ({ onClose, row }) => {
       <div className="new-timeline-row-content">
         <div className="new-timeline-form">
           <div className="form-row">
-            <div className="form-group">
+            <div className="form-group full-width">
               <label className="form-label">Details</label>
               <input
                 type="text"
                 value={formState.details}
                 onChange={(e) => handleChange('details', e.target.value)}
                 className="form-input"
-                placeholder="What is this post about?"
               />
-            </div>
-            <div className="form-group">
-              <label className="form-label">Brand</label>
-              <select
-                value={formState.brand}
-                onChange={(e) => handleChange('brand', e.target.value)}
-                className="form-input"
-              >
-                <option value="">Select brand</option>
-                {Object.keys(socialColorConfig.brands).map(b => (
-                  <option key={b} value={b}>{b}</option>
-                ))}
-              </select>
-            </div>
-            <div className="form-group">
-              <label className="form-label">Status</label>
-              <select
-                value={formState.status}
-                onChange={(e) => handleChange('status', e.target.value)}
-                className="form-input"
-              >
-                {socialStatuses.map(s => (
-                  <option key={s} value={s}>{s}</option>
-                ))}
-              </select>
             </div>
           </div>
           <div className="form-row">
@@ -133,6 +120,44 @@ const NewSocialRow = ({ onClose, row }) => {
                 ))}
               </div>
             </div>
+            <div className="form-group">
+              <label className="form-label">Brand</label>
+              <select
+                value={formState.brand}
+                onChange={(e) => handleChange('brand', e.target.value)}
+                className="form-input"
+              >
+                <option value="">Select brand</option>
+                {socialBrands.map(b => (
+                  <option key={b} value={b}>{b}</option>
+                ))}
+              </select>
+            </div>
+            <div className="form-group">
+              <label className="form-label">Content</label>
+              <select
+                value={formState.content}
+                onChange={(e) => handleChange('content', e.target.value)}
+                className="form-input"
+              >
+                <option value="">Type</option>
+                {contentTypes.map(t => (
+                  <option key={t} value={t}>{t}</option>
+                ))}
+              </select>
+            </div>
+            <div className="form-group">
+              <label className="form-label">Status</label>
+              <select
+                value={formState.status}
+                onChange={(e) => handleChange('status', e.target.value)}
+                className="form-input"
+              >
+                {socialStatuses.map(s => (
+                  <option key={s} value={s}>{s}</option>
+                ))}
+              </select>
+            </div>
             <div className="form-group date-group">
               <label className="form-label">Post Date</label>
               <input
@@ -140,27 +165,6 @@ const NewSocialRow = ({ onClose, row }) => {
                 value={formatDateForInput(formState.postDate)}
                 onChange={(e) => handleChange('postDate', e.target.value)}
                 className="form-input date-input"
-              />
-            </div>
-            <div className="form-group">
-              <label className="form-label">Owner</label>
-              <input
-                type="text"
-                value={formState.owner}
-                onChange={(e) => handleChange('owner', e.target.value)}
-                className="form-input"
-              />
-            </div>
-          </div>
-          <div className="form-row">
-            <div className="form-group full-width">
-              <label className="form-label">Content</label>
-              <textarea
-                value={formState.content}
-                onChange={(e) => handleChange('content', e.target.value)}
-                className="form-textarea"
-                rows={2}
-                placeholder="Post content..."
               />
             </div>
           </div>
@@ -172,6 +176,26 @@ const NewSocialRow = ({ onClose, row }) => {
                 onChange={(e) => handleChange('notes', e.target.value)}
                 className="form-textarea"
                 rows={2}
+              />
+            </div>
+          </div>
+          <div className="form-row">
+            <div className="form-group full-width">
+              <label className="form-label">
+                <Link2 size={14} style={{ marginRight: 4, verticalAlign: 'middle' }} />
+                Link to Editor Row
+                {filterMarket && <span className="link-filter-hint"> (showing {filterMarket} first)</span>}
+              </label>
+              {linkedTask && (
+                <div className="linked-task-preview">Linked Task: {linkedTask}</div>
+              )}
+              <LinkedRowSelector
+                currentPostDate={formState.postDate}
+                linkedTimelineId={linkedTimelineId}
+                onSelect={handleLinkSelect}
+                onClose={() => {}}
+                filterMarket={filterMarket}
+                inline={true}
               />
             </div>
           </div>

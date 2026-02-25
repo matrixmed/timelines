@@ -99,9 +99,7 @@ const Cell = memo(({
     }, [isEditing]);
     
     if (isEditing) {
-        // Auto-save on blur for all fields
         const handleBlur = () => {
-            // Update the actual value when finishing edit
             if (localValue !== value) {
                 onValueChange(localValue);
             }
@@ -110,11 +108,9 @@ const Cell = memo(({
             }
         };
 
-        // Handle keyboard events for all fields
         const handleKeyDown = (e) => {
             if (e.key === 'Enter' && !e.shiftKey) {
                 e.preventDefault();
-                // Update the actual value when pressing Enter
                 if (localValue !== value) {
                     onValueChange(localValue);
                 }
@@ -133,7 +129,6 @@ const Cell = memo(({
             onKeyDown: handleKeyDown
         };
 
-        // Handle dropdown fields (Market, Client/Sponsor, Project)
         if (['market', 'clientSponsor', 'project'].includes(field)) {
             const getDisplayName = (fieldName) => {
                 switch (fieldName) {
@@ -149,7 +144,6 @@ const Cell = memo(({
                         onChange={(e) => {
                             const newValue = e.target.value;
                             setLocalValue(newValue);
-                            // Don't call onValueChange immediately - defer until blur/commit
                         }}
                         className="cell-select"
                         style={cellStyle}
@@ -164,14 +158,12 @@ const Cell = memo(({
             );
         }
 
-        // Handle complete checkbox
         if (field === 'complete') {
             const handleCheckboxChange = (e) => {
                 const newValue = e.target.checked;
                 setLocalValue(newValue);
                 onValueChange(newValue);
                 
-                // Immediately save checkbox changes
                 setTimeout(() => {
                     commitChanges(row.id);
                 }, 50);
@@ -189,7 +181,6 @@ const Cell = memo(({
             );
         }
 
-        // Handle date field
         if (field === 'dueDate') {
             return (
                 <div className="date-picker-container">
@@ -199,7 +190,6 @@ const Cell = memo(({
                         onChange={(e) => {
                             const newValue = e.target.value;
                             setLocalValue(newValue);
-                            // Don't call onValueChange immediately - defer until blur/commit
                         }}
                         {...commonProps}
                     />
@@ -207,7 +197,6 @@ const Cell = memo(({
             );
         }
 
-        // Handle text areas (task, notes)
         if (field === 'task' || field === 'notes') {
             return (
                 <div>
@@ -216,7 +205,6 @@ const Cell = memo(({
                         onChange={(e) => {
                             const newValue = e.target.value;
                             setLocalValue(newValue);
-                            // Don't call onValueChange immediately - defer until blur/commit
                         }}
                         {...commonProps}
                     />
@@ -224,7 +212,6 @@ const Cell = memo(({
             );
         }
 
-        // Handle all other text fields
         return (
             <div>
                 <input
@@ -233,7 +220,6 @@ const Cell = memo(({
                     onChange={(e) => {
                         const newValue = e.target.value;
                         setLocalValue(newValue);
-                        // Don't call onValueChange immediately - defer until blur/commit
                     }}
                     {...commonProps}
                 />
@@ -241,18 +227,13 @@ const Cell = memo(({
         );
     }
 
-    // Special handling for complete checkbox in view mode
     if (field === 'complete') {
-        // Direct checkbox click handler with immediate save to database
         const handleCompleteChange = (e) => {
             const newValue = e.target.checked;
             
-            // First modify our local state to show the change
             onValueChange(newValue);
             
-            // Then immediately save to database without showing any pending UI
             setTimeout(() => {
-                // Direct API call for completeness change to avoid filtering issues
                 const updateCompletionStatus = async () => {
                     try {
                         const updatedRow = {
@@ -260,7 +241,6 @@ const Cell = memo(({
                             complete: newValue
                         };
                         
-                        // Make a direct API call
                         const response = await fetch(`${config.apiUrl}/api/timelines/${row.id}`, {
                             method: 'PUT',
                             headers: { 'Content-Type': 'application/json' },
@@ -271,10 +251,8 @@ const Cell = memo(({
                             throw new Error('Failed to update completion status');
                         }
                         
-                        // Emit the socket event for other clients
                         socket?.emit('update-timeline', updatedRow);
                         
-                        // Clear any edited state
                         clearEditForField?.(row.id, 'complete');
                     } catch (error) {
                         console.error('Error updating completion status:', error);
@@ -295,7 +273,6 @@ const Cell = memo(({
         );
     }
 
-    // Colored styles for certain fields
     const coloredStyle = getColoredContentStyle(field, value);
     
     if (coloredStyle && ['market', 'clientSponsor', 'project'].includes(field)) {
@@ -312,7 +289,6 @@ const Cell = memo(({
         );
     }
     
-    // Default content display
     return (
         <div
             className={`cell-content ${(field === 'task' || field === 'notes') ? 'cell-content-multiline' : ''}`}
@@ -411,7 +387,6 @@ export const TimelineTable = ({ onDeleteClick }) => {
     const tableRef = useRef(null);
     const editingRef = useRef(null);
 
-    // Restore scroll position when component mounts
     useEffect(() => {
         if (tableRef.current && tableScrollPosition) {
             setTimeout(() => {
@@ -419,7 +394,6 @@ export const TimelineTable = ({ onDeleteClick }) => {
             }, 0);
         }
 
-        // Save scroll position when component unmounts or view changes
         return () => {
             if (tableRef.current) {
                 setTableScrollPosition(tableRef.current.scrollTop);
@@ -438,7 +412,6 @@ export const TimelineTable = ({ onDeleteClick }) => {
         const handleClickOutside = (event) => {
             if (editingRef.current && !editingRef.current.contains(event.target)) {
                 if (editingCell) {
-                    // Always auto-save on click outside for regular rows
                     if (!editingCell.rowId.toString().startsWith('pending-')) {
                         commitRowChanges(editingCell.rowId);
                     }
@@ -482,7 +455,6 @@ export const TimelineTable = ({ onDeleteClick }) => {
                         setEditingCell({ rowId: prevRow.id, field });
                     }
                 } else {
-                    // Auto-save on enter
                     if (editedRows[rowId]) {
                         commitRowChanges(rowId);
                     }

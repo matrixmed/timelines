@@ -97,7 +97,6 @@
     font-style: italic;
   }
   
-  /* New Timeline Row Styles */
   .new-timeline-row {
     background: white;
     border-radius: var(--radius-md);
@@ -284,7 +283,6 @@
     border-color: var(--primary);
   }
   
-  /* Make the pending rows container scrollable */
   .pending-rows-container {
     position: sticky;
     top: 80px;
@@ -299,7 +297,6 @@
     overflow-x: hidden;
   }
   
-  /* Add some spacing between multiple forms */
   .pending-rows-container > .new-timeline-row {
     margin-bottom: 1px;
     border-bottom: 1px solid rgba(37, 99, 235, 0.1);
@@ -310,7 +307,6 @@
     border-bottom: none;
   }
   
-  /* Add some styling to make multiple rows easier to distinguish */
   .pending-rows-container > .new-timeline-row:nth-child(odd) {
     background-color: rgba(249, 250, 251, 0.5);
   }
@@ -319,7 +315,6 @@
     background-color: white;
   }
   
-  /* Better scrollbar styling */
   .pending-rows-container::-webkit-scrollbar {
     width: 8px;
   }
@@ -338,7 +333,6 @@
     background: #aaa;
   }
   
-  /* Responsive adjustments */
   @media (max-width: 768px) {
     .form-row {
       flex-direction: column;
@@ -360,7 +354,6 @@
     }
   }
   
-  /* Animations */
   @keyframes slideDown {
     from { transform: translateY(-10px); opacity: 0; }
     to { transform: translateY(0); opacity: 1; }

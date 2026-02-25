@@ -5,7 +5,6 @@ import config from '../config';
 
 const TimelineContext = createContext(null);
 
-// Load filters from localStorage
 const loadFiltersFromStorage = () => {
   try {
     const savedFilters = localStorage.getItem('timelineFilters');
@@ -38,7 +37,6 @@ export const TimelineProvider = ({ children }) => {
   const [pendingEdits, setPendingEdits] = useState({});
   const [socket, setSocket] = useState(null);
   
-  // Load saved filters from localStorage
   const savedFilterState = loadFiltersFromStorage();
   const [filters, setFilters] = useState(savedFilterState.filters);
   const [searchTerm, setSearchTerm] = useState(savedFilterState.searchTerm);
@@ -48,7 +46,6 @@ export const TimelineProvider = ({ children }) => {
   const originalRowData = useRef({});
   const socketEvents = useRef({});
 
-  // Save filters to localStorage whenever they change
   useEffect(() => {
     try {
       localStorage.setItem('timelineFilters', JSON.stringify(filters));
@@ -57,7 +54,6 @@ export const TimelineProvider = ({ children }) => {
     }
   }, [filters]);
 
-  // Save search term to localStorage whenever it changes
   useEffect(() => {
     try {
       localStorage.setItem('timelineSearchTerm', searchTerm);
@@ -274,7 +270,6 @@ export const TimelineProvider = ({ children }) => {
       addUniqueValue(field, value);
     }
     
-    // Update the editedRows state with the new value
     setEditedRows(prev => ({
       ...prev,
       [rowId]: {
@@ -283,7 +278,6 @@ export const TimelineProvider = ({ children }) => {
       }
     }));
     
-    // Update the displayed data immediately
     setData(prevData =>
       prevData.map(row => row.id === rowId ?
         { ...row, [field]: value } :
@@ -291,11 +285,9 @@ export const TimelineProvider = ({ children }) => {
       )
     );
     
-    // For checkbox, return true to ensure it stays checked in the UI
     return true;
   }, [data]);
 
-  // New function to clear edited state for a specific field
   const clearEditForField = useCallback((rowId, field) => {
     setEditedRows(prev => {
       if (!prev[rowId]) return prev;
@@ -320,9 +312,8 @@ export const TimelineProvider = ({ children }) => {
     const currentRow = data.find(row => row.id === rowId);
     if (!currentRow) return;
     
-    // Get the current edits for this row
     const rowEdits = editedRows[rowId] || {};
-    if (Object.keys(rowEdits).length === 0) return; // Nothing to save
+    if (Object.keys(rowEdits).length === 0) return;
     
     const updatedRow = {
       ...currentRow,
@@ -340,23 +331,18 @@ export const TimelineProvider = ({ children }) => {
       
       if (!response.ok) throw new Error('Failed to update row');
       
-      // Update our reference to the original data
       originalRowData.current[rowId] = { ...updatedRow };
       
-      // Notify other clients
       socket?.emit('update-timeline', updatedRow);
       
-      // Update dropdown options if needed
       fetchDropdownOptions();
       
-      // Clear edited state for this row since changes are saved
       setEditedRows(prev => {
         const newState = { ...prev };
         delete newState[rowId];
         return newState;
       });
       
-      // Exit edit mode
       setEditingCell(null);
       
       return true;
@@ -364,7 +350,6 @@ export const TimelineProvider = ({ children }) => {
       console.error('Error saving changes:', err);
       setError(err.message);
       
-      // Revert to original data on error
       setData(prevData =>
         prevData.map(row => row.id === rowId ?
           originalRowData.current[rowId] :
@@ -414,7 +399,6 @@ export const TimelineProvider = ({ children }) => {
         missedDeadline: !row.missedDeadline
       };
       
-      // Update UI immediately
       setData(prevData => prevData.map(r =>
         r.id === rowId ? updatedRow : r
       ));

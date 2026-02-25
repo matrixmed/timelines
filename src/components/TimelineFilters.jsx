@@ -104,8 +104,6 @@ export const TimelineFilters = () => {
                 styleEl.id = 'filter-button-styles';
                 document.head.appendChild(styleEl);
             }
-            
-            
         };
         
         addFilterStyles();

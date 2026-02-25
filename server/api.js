@@ -90,11 +90,13 @@ router.put('/timelines/:id', async (req, res) => {
     }
 
     if (oldRow && dueDate && String(oldRow.duedate) !== String(dueDate)) {
-      syncLinkedSocialDates(id, dueDate, io);
+      syncLinkedSocialDates(id, dueDate, io, oldRow.duedate);
     }
 
     if (oldRow && missedDeadline && !oldRow.misseddeadline) {
       flagLinkedSocialStandby(id, true, io);
+    } else if (oldRow && !missedDeadline && oldRow.misseddeadline) {
+      flagLinkedSocialStandby(id, false, io);
     }
   } catch (error) {
     console.error('Error updating timeline:', error);

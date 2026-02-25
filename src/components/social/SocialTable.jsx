@@ -2,7 +2,7 @@ import React, { useRef, useEffect, useCallback, memo, useState } from 'react';
 import { useSocial } from './SocialProvider';
 import NewSocialRow from './NewSocialRow';
 import { Check, X, Trash2, Link2 } from 'lucide-react';
-import { platforms, socialStatuses } from './SocialFields';
+import { platforms, socialStatuses, socialBrands, contentTypes, brandMarketMap } from './SocialFields';
 import { socialColorConfig } from './SocialColorConfig';
 import { applySocialFilters } from './SocialFilters';
 import { PlatformBadge } from './PlatformBadge';
@@ -42,6 +42,18 @@ const formatDate = (dateStr) => {
   } catch {
     return dateStr;
   }
+};
+
+const isInSameWeek = (date1, date2) => {
+  const d1 = new Date(date1);
+  const d2 = new Date(date2);
+  d1.setHours(0, 0, 0, 0);
+  d2.setHours(0, 0, 0, 0);
+  const weekStart1 = new Date(d1);
+  weekStart1.setDate(d1.getDate() - d1.getDay());
+  const weekStart2 = new Date(d2);
+  weekStart2.setDate(d2.getDate() - d2.getDay());
+  return weekStart1.getTime() === weekStart2.getTime();
 };
 
 const parsePlatforms = (value) => {
@@ -100,7 +112,7 @@ const SocialCell = memo(({
           {...commonProps}
         >
           <option value="">Select brand</option>
-          {Object.keys(socialColorConfig.brands).map(b => (
+          {socialBrands.map(b => (
             <option key={b} value={b}>{b}</option>
           ))}
         </select>
@@ -167,7 +179,23 @@ const SocialCell = memo(({
       );
     }
 
-    if (field === 'content' || field === 'notes') {
+    if (field === 'content') {
+      return (
+        <select
+          value={localValue || ''}
+          onChange={(e) => setLocalValue(e.target.value)}
+          className="cell-select"
+          {...commonProps}
+        >
+          <option value="">Select type</option>
+          {contentTypes.map(t => (
+            <option key={t} value={t}>{t}</option>
+          ))}
+        </select>
+      );
+    }
+
+    if (field === 'details' || field === 'notes') {
       return (
         <textarea
           value={localValue || ''}
@@ -189,12 +217,34 @@ const SocialCell = memo(({
     );
   }
 
+  if (field === 'details') {
+    return (
+      <div className="cell-content cell-content-details" onClick={() => !isPending && onCellClick()}>
+        {value || ''}
+      </div>
+    );
+  }
+
+  if (field === 'content' && value) {
+    const bgColor = socialColorConfig.contentTypes[value];
+    if (bgColor) {
+      return (
+        <div className="cell-content" onClick={() => !isPending && onCellClick()}>
+          <span className="content-type-badge"
+            style={{ backgroundColor: bgColor, color: '#fff' }}>
+            {value}
+          </span>
+        </div>
+      );
+    }
+  }
+
   if (field === 'platforms') {
     const selected = parsePlatforms(value);
     if (selected.length === 0) return <div className="cell-content" onClick={() => !isPending && onCellClick()}>-</div>;
     return (
       <div className="cell-content platform-badges" onClick={() => !isPending && onCellClick()}>
-        {selected.map(p => <PlatformBadge key={p} platform={p} />)}
+        {selected.map(p => <PlatformBadge key={p} platform={p} compact />)}
       </div>
     );
   }
@@ -234,15 +284,30 @@ const SocialCell = memo(({
   }
 
   if (field === 'postDate') {
+    const dateClass = row.linkedMissedDeadline ? 'post-date-missed' :
+                      row.dateChanged ? 'post-date-changed' : '';
     return (
-      <div className="cell-content" onClick={() => !isPending && onCellClick()}>
+      <div className={`cell-content ${dateClass}`} onClick={() => !isPending && onCellClick()}>
         {formatDate(value)}
       </div>
     );
   }
 
+  if (field === 'notes' && value) {
+    const lines = value.split('\n');
+    return (
+      <div className="cell-content cell-content-multiline" onClick={() => !isPending && onCellClick()}>
+        {lines.map((line, i) => (
+          <span key={i} className={line.startsWith('[AUTO]') ? 'auto-note-line' : ''}>
+            {line}{i < lines.length - 1 ? '\n' : ''}
+          </span>
+        ))}
+      </div>
+    );
+  }
+
   return (
-    <div className={`cell-content ${(field === 'content' || field === 'notes') ? 'cell-content-multiline' : ''}`}
+    <div className={`cell-content ${field === 'notes' ? 'cell-content-multiline' : ''}`}
       onClick={() => !isPending && onCellClick()}>
       {value || ''}
     </div>
@@ -258,11 +323,13 @@ const SocialTableRow = memo(({
 }) => {
   const isStandby = row.status === 'Standby';
   const isLinkedDeleted = row.linkedRowDeleted;
+  const isCurrentWeek = row.postDate && isInSameWeek(new Date(), fixDateOffset(row.postDate));
 
   return (
-    <tr className={`${editedRows[row.id] ? 'row-edited' : ''} ${isStandby ? 'social-row-standby' : ''} ${isLinkedDeleted ? 'social-row-linked-deleted' : ''}`}>
-      {['details', 'brand', 'content', 'platforms', 'postDate',
-        'status', 'owner', 'notes'].map(field => (
+    <tr className={`${editedRows[row.id] ? 'row-edited' : ''} ${isStandby ? 'social-row-standby' : ''} ${isLinkedDeleted ? 'social-row-linked-deleted' : ''} ${isCurrentWeek ? 'social-row-current-week' : ''}`}
+      data-current-week={isCurrentWeek || undefined}>
+      {['details', 'content', 'brand', 'platforms', 'postDate',
+        'status', 'notes'].map(field => (
         <td key={field} className="cell">
           <SocialCell
             field={field}
@@ -305,10 +372,21 @@ export const SocialTable = ({ onDeleteClick }) => {
 
   const tableRef = useRef(null);
   const [linkingRowId, setLinkingRowId] = useState(null);
+  const [hasScrolled, setHasScrolled] = useState(false);
+
+  useEffect(() => {
+    if (!hasScrolled && filteredData.length > 0 && tableRef.current) {
+      const currentWeekRow = tableRef.current.querySelector('tr[data-current-week]');
+      if (currentWeekRow) {
+        currentWeekRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+      setHasScrolled(true);
+    }
+  }, [filteredData, hasScrolled]);
 
   const columnOrder = [
-    'details', 'brand', 'content', 'platforms', 'postDate',
-    'status', 'owner', 'notes'
+    'details', 'content', 'brand', 'platforms', 'postDate',
+    'status', 'notes'
   ];
 
   const handleKeyDown = useCallback((e) => {
@@ -409,41 +487,26 @@ export const SocialTable = ({ onDeleteClick }) => {
     }
 
     return (
-      <div className="action-buttons" style={{ position: 'relative' }}>
+      <div className="action-buttons">
         <button
           className={`action-button link-toggle ${row.linkedTimelineId ? 'active' : ''}`}
           onClick={() => handleLinkRow(row.id)}
           title={row.linkedTimelineId ? 'Linked to editor row' : 'Link to editor row'}
         >
-          <Link2 size={18} />
+          <Link2 size={16} />
         </button>
-        {row.linkedRowDeleted && (
-          <button
-            className="action-button warning-dismiss"
-            onClick={() => dismissLinkedRowWarning(row.id)}
-            title="Dismiss linked row warning"
-          >
-            !
-          </button>
-        )}
         <button
           className="action-button delete"
           onClick={() => onDeleteClick(row)}
           title="Delete"
         >
-          <Trash2 size={18} />
+          <Trash2 size={16} />
         </button>
-        {linkingRowId === row.id && (
-          <LinkedRowSelector
-            currentPostDate={row.postDate}
-            linkedTimelineId={row.linkedTimelineId}
-            onSelect={(timelineId, offset) => handleLinkSelect(row.id, timelineId, offset)}
-            onClose={() => setLinkingRowId(null)}
-          />
-        )}
       </div>
     );
   }, [commitPendingRow, removePendingRow, onDeleteClick, handleLinkRow, linkingRowId, handleLinkSelect, dismissLinkedRowWarning]);
+
+  const linkingRow = linkingRowId ? data.find(r => r.id === linkingRowId) : null;
 
   return (
     <div className="table-container" ref={tableRef}>
@@ -461,8 +524,8 @@ export const SocialTable = ({ onDeleteClick }) => {
       <table className="timelines-table social-table">
         <thead className="sticky-header">
           <tr>
-            {['Details', 'Brand', 'Content', 'Platform', 'Post Date',
-              'Status', 'Owner', 'Notes', 'Actions'].map(header => (
+            {['Details', 'Content', 'Brand', 'Platform', 'Post Date',
+              'Status', 'Notes', 'Actions'].map(header => (
               <th key={header}>
                 <div className="header-content">
                   <span className="header-text">{header}</span>
@@ -480,7 +543,7 @@ export const SocialTable = ({ onDeleteClick }) => {
             <React.Fragment key={row.id}>
               {row.linkedRowDeleted && (
                 <tr className="linked-row-warning-row">
-                  <td colSpan="9">
+                  <td colSpan="8">
                     <div className="linked-row-warning">
                       Linked editor row was deleted.
                       <button onClick={() => dismissLinkedRowWarning(row.id)}>Dismiss</button>
@@ -507,6 +570,19 @@ export const SocialTable = ({ onDeleteClick }) => {
           ))}
         </tbody>
       </table>
+      {linkingRow && (
+        <div className="linked-row-modal-overlay" onClick={() => setLinkingRowId(null)}>
+          <div className="linked-row-modal" onClick={(e) => e.stopPropagation()}>
+            <LinkedRowSelector
+              currentPostDate={linkingRow.postDate}
+              linkedTimelineId={linkingRow.linkedTimelineId}
+              onSelect={(timelineId, offset) => handleLinkSelect(linkingRowId, timelineId, offset)}
+              onClose={() => setLinkingRowId(null)}
+              filterMarket={linkingRow.brand ? brandMarketMap[linkingRow.brand] : null}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 };

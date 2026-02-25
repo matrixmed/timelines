@@ -310,7 +310,6 @@
     background-color: #f9fafb;
 }
 
-
 .calendar-popover-event.missed-deadline {
   border: 2px solid var(--danger);
   box-shadow: 0 0 0 1px var(--danger-light);

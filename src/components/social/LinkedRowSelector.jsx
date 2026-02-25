@@ -1,7 +1,20 @@
 import React, { useState, useEffect, useRef } from 'react';
 import config from '../../config';
 
-export const LinkedRowSelector = ({ currentPostDate, linkedTimelineId, onSelect, onClose }) => {
+const isDateInFuture = (dateStr) => {
+  if (!dateStr) return false;
+  try {
+    const parts = dateStr.split('T')[0].split('-').map(Number);
+    const rowDate = new Date(parts[0], parts[1] - 1, parts[2]);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    return rowDate >= today;
+  } catch {
+    return false;
+  }
+};
+
+export const LinkedRowSelector = ({ currentPostDate, linkedTimelineId, onSelect, onClose, filterMarket, inline }) => {
   const [timelineRows, setTimelineRows] = useState([]);
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
@@ -25,6 +38,7 @@ export const LinkedRowSelector = ({ currentPostDate, linkedTimelineId, onSelect,
   }, []);
 
   useEffect(() => {
+    if (inline) return;
     const handleClickOutside = (e) => {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
         onClose();
@@ -32,7 +46,7 @@ export const LinkedRowSelector = ({ currentPostDate, linkedTimelineId, onSelect,
     };
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [onClose]);
+  }, [onClose, inline]);
 
   const formatDate = (dateStr) => {
     if (!dateStr) return 'No date';
@@ -44,15 +58,36 @@ export const LinkedRowSelector = ({ currentPostDate, linkedTimelineId, onSelect,
     }
   };
 
-  const filteredRows = timelineRows.filter(row => {
-    if (!search) return true;
-    const searchLower = search.toLowerCase();
-    return (
-      (row.market || '').toLowerCase().includes(searchLower) ||
-      (row.clientSponsor || '').toLowerCase().includes(searchLower) ||
-      (row.project || '').toLowerCase().includes(searchLower)
+  const filteredRows = (() => {
+    let rows = timelineRows;
+
+    rows = rows.filter(row =>
+      row.id === linkedTimelineId ||
+      (row.deployment && row.deployment.toLowerCase().includes('x'))
     );
-  });
+
+    if (!search) {
+      rows = rows.filter(row => isDateInFuture(row.dueDate) || row.id === linkedTimelineId);
+    }
+
+    if (search) {
+      const searchLower = search.toLowerCase();
+      rows = rows.filter(row =>
+        (row.market || '').toLowerCase().includes(searchLower) ||
+        (row.clientSponsor || '').toLowerCase().includes(searchLower) ||
+        (row.project || '').toLowerCase().includes(searchLower) ||
+        (row.task || '').toLowerCase().includes(searchLower)
+      );
+    }
+
+    if (filterMarket) {
+      const marketMatch = rows.filter(r => (r.market || '').toLowerCase() === filterMarket.toLowerCase());
+      const rest = rows.filter(r => (r.market || '').toLowerCase() !== filterMarket.toLowerCase());
+      return [...marketMatch, ...rest];
+    }
+
+    return rows;
+  })();
 
   const handleSelect = (row) => {
     let offset = 0;
@@ -63,7 +98,7 @@ export const LinkedRowSelector = ({ currentPostDate, linkedTimelineId, onSelect,
       const dueDateObj = new Date(y, m - 1, d);
       offset = Math.round((postDateObj - dueDateObj) / (1000 * 60 * 60 * 24));
     }
-    onSelect(row.id, offset);
+    onSelect(row.id, offset, row.task);
   };
 
   const handleUnlink = () => {
@@ -71,18 +106,20 @@ export const LinkedRowSelector = ({ currentPostDate, linkedTimelineId, onSelect,
   };
 
   return (
-    <div className="linked-row-selector" ref={dropdownRef}>
+    <div className={`linked-row-selector ${inline ? 'linked-row-selector-inline' : ''}`} ref={dropdownRef}>
       <div className="linked-row-selector-header">
         <span>Link to Editor Row</span>
-        <button className="linked-row-selector-close" onClick={onClose}>×</button>
+        {!inline && (
+          <button className="linked-row-selector-close" onClick={onClose}>&times;</button>
+        )}
       </div>
       <div className="linked-row-selector-search">
         <input
           type="text"
-          placeholder="Search by market, brand, project..."
+          placeholder="Search"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          autoFocus
+          autoFocus={!inline}
         />
       </div>
       {linkedTimelineId && (
@@ -96,20 +133,27 @@ export const LinkedRowSelector = ({ currentPostDate, linkedTimelineId, onSelect,
         ) : filteredRows.length === 0 ? (
           <div className="linked-row-selector-empty">No matching rows</div>
         ) : (
-          filteredRows.map(row => (
-            <div
-              key={row.id}
-              className={`linked-row-selector-item ${row.id === linkedTimelineId ? 'active' : ''}`}
-              onClick={() => handleSelect(row)}
-            >
-              <span className="linked-row-market">{row.market || '-'}</span>
-              <span className="linked-row-separator">-</span>
-              <span className="linked-row-client">{row.clientSponsor || '-'}</span>
-              <span className="linked-row-separator">-</span>
-              <span className="linked-row-project">{row.project || '-'}</span>
-              <span className="linked-row-date">{formatDate(row.dueDate)}</span>
-            </div>
-          ))
+          filteredRows.map(row => {
+            const isMarketMatch = filterMarket && (row.market || '').toLowerCase() === filterMarket.toLowerCase();
+            return (
+              <div
+                key={row.id}
+                className={`linked-row-selector-item ${row.id === linkedTimelineId ? 'active' : ''} ${isMarketMatch ? 'market-match' : ''}`}
+                onClick={() => handleSelect(row)}
+              >
+                <div className="linked-row-item-left">
+                  <span className="linked-row-market">{row.market || '-'}</span>
+                  <span className="linked-row-separator">-</span>
+                  <span className="linked-row-client">{row.clientSponsor || '-'}</span>
+                  <span className="linked-row-separator">-</span>
+                  <span className="linked-row-project">{row.project || '-'}</span>
+                  <span className="linked-row-separator">-</span>
+                  <span className="linked-row-task">{row.task || '-'}</span>
+                </div>
+                <span className="linked-row-date">{formatDate(row.dueDate)}</span>
+              </div>
+            );
+          })
         )}
       </div>
     </div>

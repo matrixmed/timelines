@@ -26,7 +26,6 @@
   background-color: var(--danger-light) !important;
 }
 
-/* Responsive */
 @media (max-width: 768px) {
   .toolbar {
     flex-direction: column;
@@ -51,7 +50,6 @@
   }
 }
 
-/* Animation */
 @keyframes fadeIn {
   from { opacity: 0; }
   to { opacity: 1; }
@@ -62,7 +60,6 @@
   to { transform: translateY(0); opacity: 1; }
 }
 
-/* Filter related styles */
 .filter-popover {
   position: relative;
   display: inline-block;
@@ -176,7 +173,6 @@
   background-color: var(--danger-light);
 }
 
-/* Fix for "Complete" filter column */
 th:nth-child(6) .header-filter-icon {
   display: flex !important;
   visibility: visible !important;
@@ -211,7 +207,6 @@ html, body {
   position: relative;
 }
 
-/* Layout */
 .sticky {
   position: fixed;
   top: 16px;
@@ -247,7 +242,6 @@ html, body {
   border-top: 1px solid var(--border-light);
 }
 
-/* Search */
 .search-container {
   display: flex;
   align-items: center;

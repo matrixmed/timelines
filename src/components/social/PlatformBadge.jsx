@@ -1,7 +1,14 @@
 import React from 'react';
 import { platformColors } from './SocialColorConfig';
 
-const PlatformIcon = ({ platform, size = 14 }) => {
+const platformShortNames = {
+  'LinkedIn': 'In',
+  'Twitter/X': 'X',
+  'Facebook': 'FB',
+  'Instagram': 'IG'
+};
+
+const PlatformIcon = ({ platform, size = 18 }) => {
   switch (platform) {
     case 'LinkedIn':
       return (
@@ -32,12 +39,13 @@ const PlatformIcon = ({ platform, size = 14 }) => {
   }
 };
 
-export const PlatformBadge = ({ platform }) => {
+export const PlatformBadge = ({ platform, compact }) => {
   const color = platformColors[platform] || '#666';
+  const label = compact ? platformShortNames[platform] || platform : platform;
 
   return (
     <span
-      className={`platform-badge platform-badge-${platform.toLowerCase().replace('/', '')}`}
+      className={`platform-badge platform-badge-${platform.toLowerCase().replace('/', '')} ${compact ? 'platform-badge-compact' : ''}`}
       style={{
         color: '#fff',
         backgroundColor: color,
@@ -46,8 +54,8 @@ export const PlatformBadge = ({ platform }) => {
         } : {})
       }}
     >
-      <PlatformIcon platform={platform} size={12} />
-      <span className="platform-badge-text">{platform}</span>
+      <PlatformIcon platform={platform} size={compact ? 14 : 18} />
+      {!compact && <span className="platform-badge-text">{label}</span>}
     </span>
   );
 };

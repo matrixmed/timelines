@@ -2,8 +2,14 @@ export const platforms = ['LinkedIn', 'Twitter/X', 'Facebook', 'Instagram'];
 
 export const socialStatuses = ['In Progress', 'Standby', 'Pending', 'Complete'];
 
-export let socialBrands = [];
+export const socialBrands = ['JCAD', 'ICNS', 'ONCOLOGY', 'NHR', 'NPPA'];
 
-export const setSocialBrands = (brands) => {
-  socialBrands = [...new Set(brands)].sort();
+export const brandMarketMap = {
+  'JCAD': 'Dermatology',
+  'ICNS': 'Neurology',
+  'ONCOLOGY': 'Oncology',
+  'NHR': 'NHR',
+  'NPPA': 'NPPA'
 };
+
+export const contentTypes = ['Graphic', 'Reel', 'Visual', 'Video'];
