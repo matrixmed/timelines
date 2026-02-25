@@ -295,10 +295,11 @@ const SocialCell = memo(({
 
   if (field === 'notes' && value) {
     const lines = value.split('\n');
+    const isAutoLine = (l) => l.startsWith('\u2022 ') || l.startsWith('[AUTO]');
     return (
       <div className="cell-content cell-content-multiline" onClick={() => !isPending && onCellClick()}>
         {lines.map((line, i) => (
-          <span key={i} className={line.startsWith('[AUTO]') ? 'auto-note-line' : ''}>
+          <span key={i} className={isAutoLine(line) ? 'auto-note-line' : ''}>
             {line}{i < lines.length - 1 ? '\n' : ''}
           </span>
         ))}

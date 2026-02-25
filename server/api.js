@@ -89,7 +89,12 @@ router.put('/timelines/:id', async (req, res) => {
       io.to('timelines').emit('timeline-update', transformedRow);
     }
 
-    if (oldRow && dueDate && String(oldRow.duedate) !== String(dueDate)) {
+    const normDate = (d) => {
+      if (!d) return null;
+      if (d instanceof Date) return d.toISOString().split('T')[0];
+      return String(d).split('T')[0];
+    };
+    if (oldRow && dueDate && normDate(oldRow.duedate) !== normDate(dueDate)) {
       syncLinkedSocialDates(id, dueDate, io, oldRow.duedate);
     }
 

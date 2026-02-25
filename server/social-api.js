@@ -19,11 +19,13 @@ const formatDateReadable = (dateStr) => {
   } catch { return String(dateStr); }
 };
 
-const buildAutoNote = (message) => `[AUTO] ${message}`;
+const AUTO_PREFIX = '\u2022 ';
+
+const buildAutoNote = (message) => `${AUTO_PREFIX}${message}`;
 
 const replaceAutoNotes = (existingNotes, newAutoNote) => {
   const lines = (existingNotes || '').split('\n');
-  const userLines = lines.filter(l => !l.startsWith('[AUTO]'));
+  const userLines = lines.filter(l => !l.startsWith(AUTO_PREFIX) && !l.startsWith('[AUTO]'));
   const userNotes = userLines.join('\n').trim();
   return userNotes ? `${newAutoNote}\n${userNotes}` : newAutoNote;
 };
@@ -261,11 +263,12 @@ async function syncLinkedSocialDates(timelineId, newDueDate, socketIO, oldDueDat
       newPostDate.setDate(newPostDate.getDate() + offset);
       const newPostDateStr = newPostDate.toISOString().split('T')[0];
 
+      const oldPostDate = row.postdate;
       let autoNoteText;
-      if (oldDueDate) {
-        autoNoteText = `Due date changed from ${formatDateReadable(oldDueDate)} to ${formatDateReadable(newPostDateStr)}`;
+      if (oldPostDate) {
+        autoNoteText = `Post date moved from ${formatDateReadable(oldPostDate)} to ${formatDateReadable(newPostDateStr)}`;
       } else {
-        autoNoteText = `Due date set to ${formatDateReadable(newPostDateStr)}`;
+        autoNoteText = `Post date set to ${formatDateReadable(newPostDateStr)}`;
       }
       const autoNote = buildAutoNote(autoNoteText);
       const newNotes = replaceAutoNotes(row.notes, autoNote);
