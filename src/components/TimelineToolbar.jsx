@@ -51,8 +51,8 @@ export const TimelineToolbar = ({ currentView, onViewChange, activeTab, onTabCha
         } else {
             const filteredData = applySocialFilters(data, filters, searchTerm);
             const headers = [
-                'Details', 'Content', 'Brand', 'Platforms', 'Post Date',
-                'Status', 'Notes'
+                'Details', 'Content', 'Brand', 'Platforms', 'Post Date', 'Time',
+                'Status', 'Updates', 'Notes'
             ];
             const excelData = [
                 headers,
@@ -64,8 +64,8 @@ export const TimelineToolbar = ({ currentView, onViewChange, activeTab, onTabCha
                     } catch { platformStr = row.platforms || ''; }
                     return [
                         row.details || '', row.content || '', row.brand || '',
-                        platformStr, row.postDate || '', row.status || '',
-                        row.notes || ''
+                        platformStr, row.postDate || '', row.postTime || '',
+                        row.status || '', row.notes || '', row.userNotes || ''
                     ];
                 })
             ];

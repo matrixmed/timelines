@@ -75,25 +75,7 @@ async function initializeSocialDb() {
       `);
     }
 
-    // One-time migration: move user-written lines from notes into userNotes
-    const rows = await db.query(
-      `SELECT id, notes FROM social_posts WHERE notes IS NOT NULL AND notes != '' AND userNotes IS NULL`
-    );
-    for (const row of rows.rows) {
-      const lines = row.notes.split('\n');
-      const autoLines = lines.filter(l => l.startsWith('\u2022 ') || l.startsWith('[AUTO]'));
-      const userLines = lines.filter(l => l.trim() && !l.startsWith('\u2022 ') && !l.startsWith('[AUTO]'));
-      if (userLines.length > 0) {
-        await db.query(
-          `UPDATE social_posts SET userNotes = $1, notes = $2 WHERE id = $3`,
-          [userLines.join('\n'), autoLines.join('\n'), row.id]
-        );
-      }
-    }
-
-    console.log('Social database initialized successfully');
   } catch (error) {
-    console.error('Error initializing social database:', error);
     throw error;
   }
 }

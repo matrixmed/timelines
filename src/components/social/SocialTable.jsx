@@ -351,7 +351,7 @@ const SocialCell = memo(({
 });
 
 const UserNotesPopover = ({ row, onSave }) => {
-  const [isOpen, setIsOpen] = useState(false);
+  const [mode, setMode] = useState('closed');
   const [noteText, setNoteText] = useState(row.userNotes || '');
   const popoverRef = useRef(null);
   const triggerRef = useRef(null);
@@ -360,85 +360,109 @@ const UserNotesPopover = ({ row, onSave }) => {
   useEffect(() => { setNoteText(row.userNotes || ''); }, [row.userNotes]);
 
   useEffect(() => {
-    if (!isOpen) return;
+    if (mode === 'closed') return;
     const handleClickOutside = (e) => {
       if (popoverRef.current && !popoverRef.current.contains(e.target) &&
           triggerRef.current && !triggerRef.current.contains(e.target)) {
-        setIsOpen(false);
+        setNoteText(row.userNotes || '');
+        setMode('closed');
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [isOpen]);
+  }, [mode, row.userNotes]);
 
-  const handleSave = () => {
-    onSave(row.id, noteText);
-    setIsOpen(false);
-  };
-
-  const positionPopover = () => {
+  const positionPopover = useCallback(() => {
     if (!triggerRef.current || !popoverRef.current) return;
     const rect = triggerRef.current.getBoundingClientRect();
     const popover = popoverRef.current;
     let top = rect.bottom + 6;
-    let left = rect.left - 260;
+    let left = rect.left - popover.offsetWidth + rect.width;
     if (left < 16) left = 16;
     if (top + popover.offsetHeight > window.innerHeight - 16) {
       top = rect.top - popover.offsetHeight - 6;
     }
     popover.style.top = `${top}px`;
     popover.style.left = `${left}px`;
-  };
+  }, []);
 
   useEffect(() => {
-    if (isOpen) setTimeout(positionPopover, 0);
-  }, [isOpen]);
+    if (mode !== 'closed') setTimeout(positionPopover, 0);
+  }, [mode, positionPopover]);
 
-  const handleHover = (e) => {
-    if (isOpen || !hasNotes) return;
-    const tooltip = e.currentTarget.querySelector('.user-notes-hover-tip');
-    if (tooltip) {
-      const rect = e.currentTarget.getBoundingClientRect();
-      tooltip.style.top = `${rect.bottom + 6}px`;
-      tooltip.style.left = `${rect.left - 180}px`;
-      tooltip.style.display = 'block';
+  const handleSave = () => {
+    onSave(row.id, noteText);
+    setMode('closed');
+  };
+
+  const handleClick = () => {
+    if (mode === 'closed') {
+      setMode(hasNotes ? 'viewing' : 'editing');
     }
   };
-  const handleHoverLeave = (e) => {
-    const tooltip = e.currentTarget.querySelector('.user-notes-hover-tip');
-    if (tooltip) tooltip.style.display = 'none';
+
+  const handleMouseEnter = () => {
+    if (mode === 'closed' && hasNotes) {
+      setMode('viewing');
+    }
+  };
+  const handleMouseLeave = (e) => {
+    if (mode === 'viewing') {
+      if (popoverRef.current && popoverRef.current.contains(e.relatedTarget)) return;
+      setMode('closed');
+    }
+  };
+  const handlePopoverLeave = (e) => {
+    if (mode === 'viewing') {
+      if (triggerRef.current && triggerRef.current.contains(e.relatedTarget)) return;
+      setMode('closed');
+    }
   };
 
   return (
-    <div className="user-notes-wrapper" onMouseEnter={handleHover} onMouseLeave={handleHoverLeave}>
+    <div className="user-notes-wrapper">
       <button
         ref={triggerRef}
         className={`action-button user-notes-btn ${hasNotes ? 'has-notes' : ''}`}
-        onClick={() => setIsOpen(!isOpen)}
+        onClick={handleClick}
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
         title={hasNotes ? 'View/edit notes' : 'Add notes'}
       >
         <StickyNote size={16} />
       </button>
-      {hasNotes && !isOpen && (
-        <div className="user-notes-hover-tip">
-          {row.userNotes}
-        </div>
-      )}
-      {isOpen && (
-        <div className="user-notes-popover" ref={popoverRef}>
-          <div className="user-notes-popover-title">Notes</div>
-          <textarea
-            className="user-notes-textarea"
-            value={noteText}
-            onChange={(e) => setNoteText(e.target.value)}
-            placeholder="Add notes..."
-            rows={4}
-            autoFocus
-          />
-          <div className="user-notes-popover-actions">
-            <button className="user-notes-save-btn" onClick={handleSave}>Save</button>
-            <button className="user-notes-cancel-btn" onClick={() => { setNoteText(row.userNotes || ''); setIsOpen(false); }}>Cancel</button>
-          </div>
+      {mode !== 'closed' && (
+        <div
+          className="user-notes-popover"
+          ref={popoverRef}
+          onMouseLeave={handlePopoverLeave}
+        >
+          {mode === 'viewing' && (
+            <>
+              <div className="user-notes-popover-header">
+                <span className="user-notes-popover-title">Notes</span>
+                <button className="user-notes-edit-btn" onClick={() => setMode('editing')}>Edit</button>
+              </div>
+              <div className="user-notes-read-only">{row.userNotes}</div>
+            </>
+          )}
+          {mode === 'editing' && (
+            <>
+              <div className="user-notes-popover-title">Notes</div>
+              <textarea
+                className="user-notes-textarea"
+                value={noteText}
+                onChange={(e) => setNoteText(e.target.value)}
+                placeholder="Add notes..."
+                rows={4}
+                autoFocus
+              />
+              <div className="user-notes-popover-actions">
+                <button className="user-notes-save-btn" onClick={handleSave}>Save</button>
+                <button className="user-notes-cancel-btn" onClick={() => { setNoteText(row.userNotes || ''); setMode('closed'); }}>Cancel</button>
+              </div>
+            </>
+          )}
         </div>
       )}
     </div>

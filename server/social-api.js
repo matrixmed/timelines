@@ -23,6 +23,12 @@ const AUTO_PREFIX = '\u2022 ';
 
 const buildAutoNote = (message) => `${AUTO_PREFIX}${message}`;
 
+const stripDeployFromTask = (task) => {
+  if (task === null || task === undefined) return '';
+  const stripped = String(task).replace(/deploy/gi, '').replace(/\s+/g, ' ').trim();
+  return stripped || 'task';
+};
+
 const appendAutoNote = (existingNotes, newAutoNote) => {
   const existing = (existingNotes || '').trim();
   return existing ? `${newAutoNote}\n${existing}` : newAutoNote;
@@ -116,7 +122,7 @@ router.post('/social', async (req, res) => {
     if (linkedTimelineId) {
       const info = await getLinkedTimelineInfo(db, linkedTimelineId);
       if (info && info.task) {
-        const autoNote = buildAutoNote(`Social post for ${info.task}`);
+        const autoNote = buildAutoNote(`Social post for ${stripDeployFromTask(info.task)}`);
         finalNotes = appendAutoNote(notes, autoNote);
       }
     }
@@ -176,7 +182,7 @@ router.put('/social/:id', async (req, res) => {
     if (!wasLinked && nowLinked) {
       const info = await getLinkedTimelineInfo(db, nowLinked);
       if (info && info.task) {
-        const autoNote = buildAutoNote(`Social post for ${info.task}`);
+        const autoNote = buildAutoNote(`Social post for ${stripDeployFromTask(info.task)}`);
         finalNotes = appendAutoNote(notes, autoNote);
       }
     }
@@ -256,7 +262,7 @@ async function syncLinkedSocialDates(timelineId, newDueDate, socketIO, oldDueDat
     if (linked.rows.length === 0) return;
 
     const info = await getLinkedTimelineInfo(db, timelineId);
-    const taskName = info ? info.task : 'linked task';
+    const taskName = info ? stripDeployFromTask(info.task) : 'linked task';
 
     const newDueDateObj = new Date(newDueDate);
     const today = new Date();
@@ -336,7 +342,7 @@ async function flagLinkedSocialStandby(timelineId, missedDeadline, socketIO) {
   try {
     const db = await getDb();
     const info = await getLinkedTimelineInfo(db, timelineId);
-    const taskName = info ? info.task : 'linked task';
+    const taskName = info ? stripDeployFromTask(info.task) : 'linked task';
 
     if (missedDeadline) {
       const linked = await db.query(
