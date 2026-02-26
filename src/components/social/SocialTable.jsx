@@ -74,6 +74,7 @@ const SocialCell = memo(({
   const [localValue, setLocalValue] = useState(value);
   const inputRef = useRef(null);
   const popoverRef = useRef(null);
+  const hideTimeout = useRef(null);
 
   useEffect(() => { setLocalValue(value); }, [value]);
   useEffect(() => {
@@ -300,7 +301,8 @@ const SocialCell = memo(({
     }
     const lines = value.split('\n').filter(l => l.trim());
     const firstLine = lines[0] || '';
-    const handleTriggerEnter = (e) => {
+    const showPopover = (e) => {
+      if (hideTimeout.current) { clearTimeout(hideTimeout.current); hideTimeout.current = null; }
       const popover = popoverRef.current;
       if (!popover) return;
       const rect = e.currentTarget.getBoundingClientRect();
@@ -314,9 +316,14 @@ const SocialCell = memo(({
       popover.style.top = `${top}px`;
       popover.style.left = `${left}px`;
     };
-    const handleTriggerLeave = () => {
-      const popover = popoverRef.current;
-      if (popover) popover.style.display = 'none';
+    const scheduleHide = () => {
+      hideTimeout.current = setTimeout(() => {
+        const popover = popoverRef.current;
+        if (popover) popover.style.display = 'none';
+      }, 150);
+    };
+    const cancelHide = () => {
+      if (hideTimeout.current) { clearTimeout(hideTimeout.current); hideTimeout.current = null; }
     };
     return (
       <div className="updates-cell-wrapper">
@@ -325,11 +332,14 @@ const SocialCell = memo(({
           {lines.length > 1 && (
             <span
               className="updates-history-trigger"
-              onMouseEnter={handleTriggerEnter}
-              onMouseLeave={handleTriggerLeave}
+              onMouseEnter={showPopover}
+              onMouseLeave={scheduleHide}
             >
               <History size={13} className="updates-history-icon" />
-              <div className="updates-history-popover" ref={popoverRef}>
+              <div className="updates-history-popover" ref={popoverRef}
+                onMouseEnter={cancelHide}
+                onMouseLeave={scheduleHide}
+              >
                 <div className="updates-history-title">Update History ({lines.length})</div>
                 {lines.map((line, i) => (
                   <div key={i} className="updates-history-entry">{line}</div>

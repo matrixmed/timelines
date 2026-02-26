@@ -130,7 +130,6 @@ export const TimelineToolbar = ({ currentView, onViewChange, activeTab, onTabCha
                     </Tooltip>
                 </TooltipProvider>
 
-                {/* Social tab toggle - hidden until testing complete
                 <TooltipProvider>
                     <Tooltip>
                         <TooltipTrigger asChild>
@@ -147,7 +146,6 @@ export const TimelineToolbar = ({ currentView, onViewChange, activeTab, onTabCha
                         </TooltipContent>
                     </Tooltip>
                 </TooltipProvider>
-                */}
 
                 <TooltipProvider>
                     <Tooltip>
