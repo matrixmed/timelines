@@ -72,7 +72,7 @@ export const clientColors = {
     'Lilly/Med Affairs': '#0067a3ff', 
     'Medtronic/Signia': '#1010eb', 
     'None': '#FFFFFF',
-    'UCB': '#0b4d89',
+    'UCB/Bimzelx': '#0b4d89',
     'Ortho/Cabtreo': '#164e89',  
     'Skinbetter': '#faede1',   
     'Skinceuticals': '#da8585', 
